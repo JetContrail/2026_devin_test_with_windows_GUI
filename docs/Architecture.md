@@ -116,6 +116,7 @@ classDiagram
 
 - **PixelBuffer**: `byte[]` の BGRA32 (非乗算 α)。WPF の `WriteableBitmap` (`Bgra32`) と同レイアウトで、表示時はコピーのみ
 - **レイヤー分離**: ツールは `DrawingDocument.ActiveLayer` (常に `RasterLayer`) のみを編集する。`BackgroundLayer` は `IsEditable=false` で、ツールへの公開 API を持たない
+- **下絵読込**: `MainViewModel.LoadBackgroundCommand` → `IDialogService.ShowOpenImageDialog()` (UI 層の抽象。実装は `WpfDialogService`) → `DocumentService.LoadBackground(path)` → `IImageDecoder.Decode` → `DrawingDocument.LoadBackground`。開けない/読めないファイルは `ImageDecodeException` になり、`IDialogService.ShowError` で表示してドキュメントは変更しない。`DrawingCanvas` は `CanvasViewModel.LayersReset` を受けて背景・描画の両ビットマップを作り直す。Undo 履歴のクリア (A4) は Phase6 で `Reset` に接続する
 - **DrawingDocument**: 既定 1280x720 (背景は白、描画レイヤーは透明)。`LoadBackground(image)` でキャンバスを下絵サイズに合わせ、描画レイヤーは左上を基準に残し、はみ出した部分は切り捨てる (`PixelBuffer.Resized`)。バッファを差し替えたら `Reset` を通知し、`DrawingSession` は描画途中のストロークを破棄する
 - **消しゴム**: `BlendMode.Erase` で描画レイヤーの α を 0 にする。背景は別バッファのため影響しない
 - **色**: `ToolOptions.Color` (`RgbaColor`) をストローク開始時に取得してラスタライザへ渡す。初版は `RgbaColor.Black` 固定

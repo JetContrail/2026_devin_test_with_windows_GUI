@@ -1,3 +1,4 @@
+using DrawingApp.UI.Services;
 using DrawingApp.UI.ViewModels;
 using DrawingApp.UI.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,7 @@ public static class UiServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        services.AddSingleton<IDialogService, WpfDialogService>();
         services.AddSingleton<CanvasViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();

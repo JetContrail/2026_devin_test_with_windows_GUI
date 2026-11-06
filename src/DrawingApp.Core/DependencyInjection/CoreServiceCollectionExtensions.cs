@@ -8,7 +8,7 @@ namespace DrawingApp.Core.DependencyInjection;
 
 public static class CoreServiceCollectionExtensions
 {
-    /// <summary>Registers domain and application services.</summary>
+    /// <summary>Registers domain and application services. Ports (e.g. IImageDecoder) come from AddInfrastructure.</summary>
     public static IServiceCollection AddCore(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -19,6 +19,7 @@ public static class CoreServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ITool, EraserTool>());
         services.TryAddSingleton(_ => new DrawingDocument());
         services.TryAddSingleton<DrawingSession>();
+        services.TryAddSingleton<DocumentService>();
         return services;
     }
 }

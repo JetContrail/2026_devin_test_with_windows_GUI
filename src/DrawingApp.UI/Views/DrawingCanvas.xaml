@@ -14,8 +14,7 @@
           MouseMove="OnMouseMove"
           MouseLeftButtonUp="OnMouseLeftButtonUp"
           LostMouseCapture="OnLostMouseCapture">
-        <!-- Background layer: plain white until background images are supported (Phase 4). -->
-        <Rectangle Fill="White" />
+        <Image x:Name="BackgroundImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
         <Image x:Name="DrawingImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
     </Grid>
 </UserControl>
