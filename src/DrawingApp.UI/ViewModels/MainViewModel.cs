@@ -32,6 +32,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _dialogs = dialogs;
         Canvas = canvas;
         _toolOptions.Changed += OnToolOptionsChanged;
+        Canvas.HistoryChanged += OnHistoryChanged;
     }
 
     public string Title => "DrawingApp";
@@ -75,7 +76,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public string ZoomText => $"{ZoomFactor * 100:0}%";
 
-    public void Dispose() => _toolOptions.Changed -= OnToolOptionsChanged;
+    public void Dispose()
+    {
+        _toolOptions.Changed -= OnToolOptionsChanged;
+        Canvas.HistoryChanged -= OnHistoryChanged;
+    }
 
     [RelayCommand]
     private void SelectTool(ToolKind tool) => _toolOptions.ActiveTool = tool;
@@ -105,19 +110,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void SaveComposite() => Save("合成保存", "composite.png", _export.SaveComposite);
 
-    // Commands below are wired to the menu now and implemented in later phases (see docs/Roadmap.md).
+    [RelayCommand(CanExecute = nameof(CanUndo))]
+    private void Undo() => Canvas.Undo();
 
-    [RelayCommand(CanExecute = nameof(IsFeatureAvailable))]
-    private void Undo()
-    {
-    }
+    [RelayCommand(CanExecute = nameof(CanRedo))]
+    private void Redo() => Canvas.Redo();
 
-    [RelayCommand(CanExecute = nameof(IsFeatureAvailable))]
-    private void Redo()
-    {
-    }
+    private bool CanUndo() => Canvas.CanUndo;
 
-    private static bool IsFeatureAvailable() => false;
+    private bool CanRedo() => Canvas.CanRedo;
 
     private void Save(string title, string defaultFileName, Action<string> save)
     {
@@ -135,6 +136,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             _dialogs.ShowError($"保存できませんでした。\n{ex.Message}");
         }
+    }
+
+    private void OnHistoryChanged(object? sender, EventArgs e)
+    {
+        UndoCommand.NotifyCanExecuteChanged();
+        RedoCommand.NotifyCanExecuteChanged();
     }
 
     private void OnToolOptionsChanged(object? sender, EventArgs e)

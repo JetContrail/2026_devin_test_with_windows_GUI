@@ -148,7 +148,7 @@ UI/
 ```
 
 - MVVM ライブラリ: `CommunityToolkit.Mvvm` (`ObservableObject`, `[ObservableProperty]`, `[RelayCommand]`)
-- キーバインド: `Ctrl+Z` → `UndoCommand`, `Ctrl+Y` → `RedoCommand` (`Window.InputBindings`)
+- キーバインド: `Ctrl+Z` → `UndoCommand`, `Ctrl+Y` → `RedoCommand` (`Window.InputBindings`)。コマンドは `CanvasViewModel.Undo()/Redo()` → `DrawingSession` を呼び、`CanExecute` は `UndoHistory.CanUndo/CanRedo`。`UndoHistory.Changed` → `CanvasViewModel.HistoryChanged` → `NotifyCanExecuteChanged` でメニュー項目の有効/無効が切り替わる
 - 表示: `ScrollViewer` 不使用。`DrawingCanvas` 内で背景 `Image` と描画 `Image` を重ね、`ViewportState` から生成した `MatrixTransform` を適用。高倍率時は `BitmapScalingMode=NearestNeighbor`
 
 ## 4. 主要フロー

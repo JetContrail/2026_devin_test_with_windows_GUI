@@ -2,7 +2,7 @@
 
 下絵画像の上に描画できる Windows 向けお絵描きアプリケーション (C# / .NET 10 / WPF)。
 
-> 開発中 (Phase5: ペン・点・消しゴム・レイヤー管理・下絵読込・PNG 保存まで実装済み)。進捗は [Roadmap](docs/Roadmap.md) と [Milestones](https://github.com/JetContrail/2026_devin_test_with_windows_GUI/milestones) を参照。
+> 開発中 (Phase6: ペン・点・消しゴム・レイヤー管理・下絵読込・PNG 保存・Undo/Redo まで実装済み)。進捗は [Roadmap](docs/Roadmap.md) と [Milestones](https://github.com/JetContrail/2026_devin_test_with_windows_GUI/milestones) を参照。
 
 ## 概要
 

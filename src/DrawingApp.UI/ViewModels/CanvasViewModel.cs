@@ -18,6 +18,7 @@ public sealed class CanvasViewModel : ObservableObject, IDisposable
         _session = session;
         _session.Invalidated += OnSessionInvalidated;
         _session.Document.Reset += OnDocumentReset;
+        _session.History.Changed += OnHistoryChanged;
     }
 
     /// <summary>Raised with the area of <see cref="DrawingLayer"/> that must be redrawn.</summary>
@@ -25,6 +26,9 @@ public sealed class CanvasViewModel : ObservableObject, IDisposable
 
     /// <summary>Raised when the layer buffers were replaced and the view must recreate its bitmaps.</summary>
     public event EventHandler? LayersReset;
+
+    /// <summary>Raised when <see cref="CanUndo"/> or <see cref="CanRedo"/> may have changed.</summary>
+    public event EventHandler? HistoryChanged;
 
     public PixelBuffer BackgroundLayer => _session.Document.Background.Pixels;
 
@@ -36,6 +40,10 @@ public sealed class CanvasViewModel : ObservableObject, IDisposable
 
     public bool IsStrokeActive => _session.IsStrokeActive;
 
+    public bool CanUndo => _session.History.CanUndo;
+
+    public bool CanRedo => _session.History.CanRedo;
+
     public void PointerDown(double x, double y) => _session.BeginStroke(new CanvasPoint(x, y));
 
     public void PointerMove(double x, double y) => _session.ContinueStroke(new CanvasPoint(x, y));
@@ -44,13 +52,20 @@ public sealed class CanvasViewModel : ObservableObject, IDisposable
 
     public void CancelPointer() => _session.CancelStroke();
 
+    public void Undo() => _session.Undo();
+
+    public void Redo() => _session.Redo();
+
     public void Dispose()
     {
         _session.Invalidated -= OnSessionInvalidated;
         _session.Document.Reset -= OnDocumentReset;
+        _session.History.Changed -= OnHistoryChanged;
     }
 
     private void OnSessionInvalidated(object? sender, CanvasInvalidatedEventArgs e) => Invalidated?.Invoke(this, e);
+
+    private void OnHistoryChanged(object? sender, EventArgs e) => HistoryChanged?.Invoke(this, e);
 
     private void OnDocumentReset(object? sender, EventArgs e)
     {
