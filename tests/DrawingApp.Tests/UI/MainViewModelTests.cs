@@ -5,6 +5,7 @@ using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
+using DrawingApp.Core.Domain.Viewport;
 using DrawingApp.Tests.Core;
 using DrawingApp.UI.ViewModels;
 
@@ -25,7 +26,7 @@ public sealed class MainViewModelTests : IDisposable
     {
         _documents = new DocumentService(_document, _decoder);
         _export = new ExportService(_document, [new FakeImageEncoder()]);
-        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)], _document, new UndoHistory()));
+        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)], _document, new UndoHistory()), new ViewportState());
         _viewModel = new MainViewModel(_options, _canvas, _documents, _export, _dialogs);
     }
 
@@ -103,6 +104,31 @@ public sealed class MainViewModelTests : IDisposable
         _viewModel.Dispose();
 
         _options.ActiveTool = ToolKind.Dot;
+
+        Assert.Equal(0, changed);
+    }
+
+    [Fact]
+    public void Zoom_UpdatesZoomText()
+    {
+        var changed = new List<string?>();
+        _viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        _canvas.Zoom(0, 0, CanvasViewModel.WheelDeltaPerNotch);
+
+        Assert.Equal(1.25, _viewModel.ZoomFactor);
+        Assert.Equal("125%", _viewModel.ZoomText);
+        Assert.Contains(nameof(MainViewModel.ZoomText), changed);
+    }
+
+    [Fact]
+    public void Dispose_StopsZoomNotifications()
+    {
+        var changed = 0;
+        _viewModel.PropertyChanged += (_, _) => changed++;
+        _viewModel.Dispose();
+
+        _canvas.Zoom(0, 0, CanvasViewModel.WheelDeltaPerNotch);
 
         Assert.Equal(0, changed);
     }

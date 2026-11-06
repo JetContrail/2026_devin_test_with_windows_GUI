@@ -149,7 +149,7 @@ UI/
 
 - MVVM ライブラリ: `CommunityToolkit.Mvvm` (`ObservableObject`, `[ObservableProperty]`, `[RelayCommand]`)
 - キーバインド: `Ctrl+Z` → `UndoCommand`, `Ctrl+Y` → `RedoCommand` (`Window.InputBindings`)。コマンドは `CanvasViewModel.Undo()/Redo()` → `DrawingSession` を呼び、`CanExecute` は `UndoHistory.CanUndo/CanRedo`。`UndoHistory.Changed` → `CanvasViewModel.HistoryChanged` → `NotifyCanExecuteChanged` でメニュー項目の有効/無効が切り替わる
-- 表示: `ScrollViewer` 不使用。`DrawingCanvas` 内で背景 `Image` と描画 `Image` を重ね、`ViewportState` から生成した `MatrixTransform` を適用。高倍率時は `BitmapScalingMode=NearestNeighbor`
+- 表示: `ScrollViewer` 不使用。`DrawingCanvas` が表示領域全体 (灰色・`ClipToBounds`) を占め、背景 `Image` と描画 `Image` を重ねた `Surface` に `ScaleTransform(Scale)` → `TranslateTransform(Offset)` を適用 (`CanvasViewModel.Scale/OffsetX/OffsetY` にバインド)。`e.GetPosition(Surface)` は WPF が逆変換するので、描画入力は変換なしでキャンバス画素になる。高倍率時は `BitmapScalingMode=NearestNeighbor`
 
 ## 4. 主要フロー
 
@@ -164,7 +164,7 @@ sequenceDiagram
     participant D as DrawingDocument
     participant H as UndoHistory
     V->>VM: PointerPressed(screen pt)
-    VM->>VM: ViewportState.ScreenToCanvas
+    V->>V: GetPosition(Surface) (RenderTransform の逆変換でキャンバス座標)
     VM->>S: BeginStroke(canvas pt)
     S->>T: PointerDown → 円スタンプ
     T->>D: ActiveLayer.Pixels 更新 / Changed(dirty)
@@ -199,7 +199,10 @@ sequenceDiagram
 - `ZoomPolicy.Step(current, notches)`: 正なら current より大きい段階へ、負なら小さい段階へ notches 段移動し、表の端で止まる (表にない倍率は進む方向の次の段階へ寄せる)
 - カーソル位置アンカー: `ViewportState.ZoomAt(cursor, notches)` が `offset' = cursor - (cursor - offset) * (scale' / scale)` で Offset を更新する (Core でテスト)。倍率が変わらない (端に達している) ときは何もしない
 - `ViewportState` は `AddCore()` で Singleton 登録し、`Changed` イベントで View に通知する
-- パン: 中ボタンドラッグ、または Space 押下中の左ドラッグで `Offset` を加算
+- パン: 中ボタンドラッグ、または Space 押下中の左ドラッグ (`PreviewMouseLeftButtonDown` で横取りするので描画しない) で `Offset` を加算。`CanvasViewModel.BeginPan/PanTo/EndPan` が直前位置との差分を `ViewportState.PanBy` に渡す。ストローク中はパンを開始しない
+- ホイール: `CanvasViewModel.Zoom(x, y, delta)` が `delta` を 120 (1 ノッチ) 単位に貯めてから `ZoomAt` を呼ぶ (高分解能ホイール・タッチパッド対策)。座標は `Viewport` パネル基準
+- 下絵読込 (`DrawingDocument.Reset`) で 100%・原点に戻す
+- ツールバーの倍率表示: `ViewportChanged` → `MainViewModel.ZoomFactor/ZoomText`
 
 ### 4.5 オートセーブ
 

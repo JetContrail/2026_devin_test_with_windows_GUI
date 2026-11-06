@@ -66,10 +66,6 @@
             </ToolBar>
         </ToolBarTray>
 
-        <!-- Scrolling/zooming is handled by the viewport in Phase 7; until then the canvas is shown at 100%. -->
-        <Border Background="#FF808080" ClipToBounds="True">
-            <views:DrawingCanvas DataContext="{Binding Canvas}" Margin="8"
-                                 HorizontalAlignment="Left" VerticalAlignment="Top" />
-        </Border>
+        <views:DrawingCanvas DataContext="{Binding Canvas}" />
     </DockPanel>
 </Window>
