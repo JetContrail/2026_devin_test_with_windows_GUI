@@ -275,9 +275,9 @@ sequenceDiagram
 | トリガ | `pull_request` (全ブランチ), `push` (main), `workflow_dispatch` |
 | ランナー | `windows-latest` (WPF ビルド・テストのため) |
 | SDK | `actions/setup-dotnet` (`global-json-file: global.json`) |
-| 手順 | `dotnet restore` → `dotnet build -c Release --no-restore` → `dotnet test -c Release --no-build --collect "XPlat Code Coverage"` → ReportGenerator |
+| 手順 | `dotnet restore` → `dotnet build -c Release --no-restore` → `dotnet test -c Release --no-build --collect "XPlat Code Coverage"` → ReportGenerator → `dotnet publish` (win-x64, self-contained, 単一 exe) |
 | 失敗条件 | ビルドエラー / 警告 (`TreatWarningsAsErrors`) / テスト失敗。Phase9 以降はカバレッジ 80% 未満も失敗 |
-| 成果物 | テスト結果 (TRX), カバレッジ HTML (Artifact), Markdown サマリ (Job Summary) |
+| 成果物 | テスト結果 (TRX), カバレッジ HTML (Artifact), Markdown サマリ (Job Summary), 実行ファイル `DrawingApp-win-x64` (Artifact, 保持 14 日) |
 | その他 | `concurrency` で同一 PR の古い実行をキャンセル、NuGet キャッシュ |
 
 ## 10. 非機能要求への対応

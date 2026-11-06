@@ -38,6 +38,16 @@ Compiler Warning はエラー扱い (`TreatWarningsAsErrors`)。
 dotnet run --project src/DrawingApp.UI
 ```
 
+### 配布用 exe (.NET のインストール不要)
+
+```powershell
+dotnet publish src/DrawingApp.UI -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none `
+  -o publish/DrawingApp
+```
+
+`publish/DrawingApp/DrawingApp.exe` (約 140MB, Windows 10/11 x64) を起動する。CI でも毎回同じ exe を作り、Actions の実行結果から Artifact `DrawingApp-win-x64` としてダウンロードできる (保持 14 日)。署名していないため、初回は SmartScreen の警告が出ることがある。
+
 ## テスト方法
 
 ```powershell
