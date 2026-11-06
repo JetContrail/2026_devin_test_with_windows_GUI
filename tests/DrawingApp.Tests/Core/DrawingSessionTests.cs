@@ -72,6 +72,20 @@ public class DrawingSessionTests
     }
 
     [Fact]
+    public void ActiveTool_SelectsMatchingTool()
+    {
+        var session = new DrawingSession(_options, [new PenTool(_options), new DotTool(_options)]);
+        _options.ActiveTool = ToolKind.Dot;
+
+        session.BeginStroke(new CanvasPoint(10.5, 10.5));
+        session.ContinueStroke(new CanvasPoint(30.5, 10.5));
+        session.EndStroke(new CanvasPoint(30.5, 10.5));
+
+        Assert.Equal(RgbaColor.Black, session.DrawingLayer.GetPixel(10, 10));
+        Assert.Equal(0, session.DrawingLayer.GetPixel(20, 10).A);
+    }
+
+    [Fact]
     public void MoveOrEndWithoutStroke_DoesNothing()
     {
         _session.ContinueStroke(new CanvasPoint(10, 10));

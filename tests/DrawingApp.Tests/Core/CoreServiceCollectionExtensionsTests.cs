@@ -17,12 +17,13 @@ public class CoreServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddCore_RegistersPenToolAndDrawingSession()
+    public void AddCore_RegistersToolsAndDrawingSession()
     {
         using var provider = new ServiceCollection().AddCore().AddCore()
             .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 
         Assert.Single(provider.GetServices<ITool>(), tool => tool is PenTool);
+        Assert.Single(provider.GetServices<ITool>(), tool => tool is DotTool);
         Assert.Same(provider.GetRequiredService<DrawingSession>(), provider.GetRequiredService<DrawingSession>());
     }
 

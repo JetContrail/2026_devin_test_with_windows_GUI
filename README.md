@@ -2,7 +2,7 @@
 
 下絵画像の上に描画できる Windows 向けお絵描きアプリケーション (C# / .NET 10 / WPF)。
 
-> 開発中 (Phase2: キャンバスとペン描画まで実装済み)。進捗は [Roadmap](docs/Roadmap.md) と [Milestones](https://github.com/JetContrail/2026_devin_test_with_windows_GUI/milestones) を参照。
+> 開発中 (Phase3: ペン・点描画まで実装済み)。進捗は [Roadmap](docs/Roadmap.md) と [Milestones](https://github.com/JetContrail/2026_devin_test_with_windows_GUI/milestones) を参照。
 
 ## 概要
 
