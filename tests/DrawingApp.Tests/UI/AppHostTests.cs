@@ -1,3 +1,4 @@
+using DrawingApp.Core.Application.AutoSave;
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.UI.Hosting;
 using DrawingApp.UI.Services;
@@ -21,6 +22,7 @@ public class AppHostTests
         Assert.Same(host.Services.GetRequiredService<ToolOptions>(), host.Services.GetRequiredService<ToolOptions>());
         Assert.Same(TimeProvider.System, host.Services.GetRequiredService<TimeProvider>());
         Assert.IsType<WpfDialogService>(host.Services.GetRequiredService<IDialogService>());
+        Assert.NotNull(host.Services.GetRequiredService<AutoSaveService>());
     }
 
     [Fact]

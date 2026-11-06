@@ -1,3 +1,4 @@
+using DrawingApp.Core.Application.AutoSave;
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.History;
@@ -25,6 +26,8 @@ public static class CoreServiceCollectionExtensions
         services.TryAddSingleton<ViewportState>();
         services.TryAddSingleton<DocumentService>();
         services.TryAddSingleton<ExportService>();
+        services.TryAddSingleton<AutoSaveOptions>();
+        services.TryAddSingleton<AutoSaveService>();
         return services;
     }
 }
