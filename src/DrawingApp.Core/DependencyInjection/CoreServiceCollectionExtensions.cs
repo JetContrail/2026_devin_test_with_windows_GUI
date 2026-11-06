@@ -20,6 +20,7 @@ public static class CoreServiceCollectionExtensions
         services.TryAddSingleton(_ => new DrawingDocument());
         services.TryAddSingleton<DrawingSession>();
         services.TryAddSingleton<DocumentService>();
+        services.TryAddSingleton<ExportService>();
         return services;
     }
 }

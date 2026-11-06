@@ -30,6 +30,7 @@ public class CoreServiceCollectionExtensionsTests
         Assert.Same(provider.GetRequiredService<DrawingSession>(), provider.GetRequiredService<DrawingSession>());
         Assert.Same(provider.GetRequiredService<DrawingDocument>(), provider.GetRequiredService<DrawingSession>().Document);
         Assert.NotNull(provider.GetRequiredService<DocumentService>());
+        Assert.NotNull(provider.GetRequiredService<ExportService>());
     }
 
     [Fact]
