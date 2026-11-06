@@ -84,7 +84,15 @@ public sealed class CanvasViewModelTests : IDisposable
         _session.Document.LoadBackground(new PixelBuffer(30, 20));
 
         Assert.Equal(1, resets);
-        Assert.Equal(new[] { nameof(CanvasViewModel.CanvasWidth), nameof(CanvasViewModel.CanvasHeight) }, changed);
+        Assert.Equal(
+            [
+                nameof(CanvasViewModel.CanvasWidth),
+                nameof(CanvasViewModel.CanvasHeight),
+                nameof(CanvasViewModel.Scale),
+                nameof(CanvasViewModel.OffsetX),
+                nameof(CanvasViewModel.OffsetY),
+            ],
+            changed);
         Assert.Equal((30, 20), (_viewModel.CanvasWidth, _viewModel.CanvasHeight));
         Assert.Same(_session.DrawingLayer, _viewModel.DrawingLayer);
     }
