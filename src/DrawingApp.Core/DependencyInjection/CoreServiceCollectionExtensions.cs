@@ -2,6 +2,7 @@ using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Tools;
+using DrawingApp.Core.Domain.Viewport;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -21,6 +22,7 @@ public static class CoreServiceCollectionExtensions
         services.TryAddSingleton(_ => new DrawingDocument());
         services.TryAddSingleton(_ => new UndoHistory());
         services.TryAddSingleton<DrawingSession>();
+        services.TryAddSingleton<ViewportState>();
         services.TryAddSingleton<DocumentService>();
         services.TryAddSingleton<ExportService>();
         return services;
