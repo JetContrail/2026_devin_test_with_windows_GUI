@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WPF only runs on Windows. On Windows the tests target net10.0-windows and cover every layer;
+    elsewhere they target net10.0 and only the OS-independent Core tests are compiled and run.
+    Override with -p:IsWindowsHost=true to compile the Windows tests on another OS.
+  -->
+  <PropertyGroup>
+    <IsWindowsHost Condition="'$(IsWindowsHost)' == ''">$([MSBuild]::IsOSPlatform('Windows'))</IsWindowsHost>
+    <TargetFramework Condition="'$(IsWindowsHost)' == 'true'">net10.0-windows</TargetFramework>
+    <TargetFramework Condition="'$(IsWindowsHost)' != 'true'">net10.0</TargetFramework>
+    <UseWPF Condition="'$(IsWindowsHost)' == 'true'">true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DrawingApp.Core\DrawingApp.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsWindowsHost)' == 'true'">
+    <ProjectReference Include="..\..\src\DrawingApp.Infrastructure\DrawingApp.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsWindowsHost)' != 'true'">
+    <Compile Remove="Infrastructure\**" />
+    <None Include="Infrastructure\**" />
+  </ItemGroup>
+
+</Project>

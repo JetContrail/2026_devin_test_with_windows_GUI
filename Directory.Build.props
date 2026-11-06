@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Allows building the Windows-only projects on Linux/macOS (WPF cannot run there). -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>
