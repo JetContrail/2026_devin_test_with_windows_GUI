@@ -1,6 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DrawingApp.Core.Application.Ports;
+using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Tools;
+using DrawingApp.UI.Services;
 
 namespace DrawingApp.UI.ViewModels;
 
@@ -11,13 +14,19 @@ namespace DrawingApp.UI.ViewModels;
 public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly ToolOptions _toolOptions;
+    private readonly DocumentService _documents;
+    private readonly IDialogService _dialogs;
 
-    public MainViewModel(ToolOptions toolOptions, CanvasViewModel canvas)
+    public MainViewModel(ToolOptions toolOptions, CanvasViewModel canvas, DocumentService documents, IDialogService dialogs)
     {
         ArgumentNullException.ThrowIfNull(toolOptions);
         ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(documents);
+        ArgumentNullException.ThrowIfNull(dialogs);
 
         _toolOptions = toolOptions;
+        _documents = documents;
+        _dialogs = dialogs;
         Canvas = canvas;
         _toolOptions.Changed += OnToolOptionsChanged;
     }
@@ -68,11 +77,26 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void SelectTool(ToolKind tool) => _toolOptions.ActiveTool = tool;
 
-    // Commands below are wired to the menu now and implemented in later phases (see docs/Roadmap.md).
-    [RelayCommand(CanExecute = nameof(IsFeatureAvailable))]
+    [RelayCommand]
     private void LoadBackground()
     {
+        var path = _dialogs.ShowOpenImageDialog();
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _documents.LoadBackground(path);
+        }
+        catch (ImageDecodeException ex)
+        {
+            _dialogs.ShowError($"下絵を読み込めませんでした。\n{ex.Message}");
+        }
     }
+
+    // Commands below are wired to the menu now and implemented in later phases (see docs/Roadmap.md).
 
     [RelayCommand(CanExecute = nameof(IsFeatureAvailable))]
     private void SaveDrawingOnly()

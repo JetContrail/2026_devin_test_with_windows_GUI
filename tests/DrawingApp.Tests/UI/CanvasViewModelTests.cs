@@ -67,5 +67,37 @@ public sealed class CanvasViewModelTests : IDisposable
     }
 
     [Fact]
+    public void ExposesBackgroundLayer() =>
+        Assert.Same(_session.Document.Background.Pixels, _viewModel.BackgroundLayer);
+
+    [Fact]
+    public void DocumentReset_RaisesLayersResetAndSizeChanges()
+    {
+        var resets = 0;
+        var changed = new List<string?>();
+        _viewModel.LayersReset += (_, _) => resets++;
+        _viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        _session.Document.LoadBackground(new PixelBuffer(30, 20));
+
+        Assert.Equal(1, resets);
+        Assert.Equal(new[] { nameof(CanvasViewModel.CanvasWidth), nameof(CanvasViewModel.CanvasHeight) }, changed);
+        Assert.Equal((30, 20), (_viewModel.CanvasWidth, _viewModel.CanvasHeight));
+        Assert.Same(_session.DrawingLayer, _viewModel.DrawingLayer);
+    }
+
+    [Fact]
+    public void Dispose_StopsForwardingReset()
+    {
+        var resets = 0;
+        _viewModel.LayersReset += (_, _) => resets++;
+        _viewModel.Dispose();
+
+        _session.Document.LoadBackground(new PixelBuffer(30, 20));
+
+        Assert.Equal(0, resets);
+    }
+
+    [Fact]
     public void Constructor_Null_Throws() => Assert.Throws<ArgumentNullException>(() => new CanvasViewModel(null!));
 }

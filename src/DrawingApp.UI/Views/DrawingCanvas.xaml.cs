@@ -26,16 +26,27 @@ public partial class DrawingCanvas : UserControl
         if (_viewModel is not null)
         {
             _viewModel.Invalidated -= OnInvalidated;
+            _viewModel.LayersReset -= OnLayersReset;
         }
 
         _viewModel = e.NewValue as CanvasViewModel;
-        _presenter = _viewModel is null ? null : new LayerBitmapPresenter(_viewModel.DrawingLayer);
-        DrawingImage.Source = _presenter?.Bitmap;
+        RecreateBitmaps();
 
         if (_viewModel is not null)
         {
             _viewModel.Invalidated += OnInvalidated;
+            _viewModel.LayersReset += OnLayersReset;
         }
+    }
+
+    private void OnLayersReset(object? sender, EventArgs e) => RecreateBitmaps();
+
+    private void RecreateBitmaps()
+    {
+        // The background never changes after loading, so it is converted once without dirty tracking.
+        BackgroundImage.Source = _viewModel is null ? null : new LayerBitmapPresenter(_viewModel.BackgroundLayer).Bitmap;
+        _presenter = _viewModel is null ? null : new LayerBitmapPresenter(_viewModel.DrawingLayer);
+        DrawingImage.Source = _presenter?.Bitmap;
     }
 
     private void OnInvalidated(object? sender, CanvasInvalidatedEventArgs e) => _presenter?.Update(e.Area);

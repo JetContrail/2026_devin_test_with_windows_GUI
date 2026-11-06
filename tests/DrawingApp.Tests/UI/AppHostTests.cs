@@ -1,5 +1,6 @@
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.UI.Hosting;
+using DrawingApp.UI.Services;
 using DrawingApp.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,7 @@ public class AppHostTests
         Assert.Same(host.Services.GetRequiredService<CanvasViewModel>(), viewModel.Canvas);
         Assert.Same(host.Services.GetRequiredService<ToolOptions>(), host.Services.GetRequiredService<ToolOptions>());
         Assert.Same(TimeProvider.System, host.Services.GetRequiredService<TimeProvider>());
+        Assert.IsType<WpfDialogService>(host.Services.GetRequiredService<IDialogService>());
     }
 
     [Fact]

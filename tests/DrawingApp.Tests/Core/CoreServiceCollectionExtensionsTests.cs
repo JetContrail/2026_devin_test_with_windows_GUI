@@ -1,5 +1,7 @@
+using DrawingApp.Core.Application.Ports;
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.DependencyInjection;
+using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.Tools;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +12,7 @@ public class CoreServiceCollectionExtensionsTests
     [Fact]
     public void AddCore_RegistersToolOptionsAsSingleton()
     {
-        using var provider = new ServiceCollection().AddCore()
+        using var provider = CreateServices().AddCore()
             .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 
         Assert.Same(provider.GetRequiredService<ToolOptions>(), provider.GetRequiredService<ToolOptions>());
@@ -19,16 +21,26 @@ public class CoreServiceCollectionExtensionsTests
     [Fact]
     public void AddCore_RegistersToolsAndDrawingSession()
     {
-        using var provider = new ServiceCollection().AddCore().AddCore()
+        using var provider = CreateServices().AddCore().AddCore()
             .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 
         Assert.Single(provider.GetServices<ITool>(), tool => tool is PenTool);
         Assert.Single(provider.GetServices<ITool>(), tool => tool is DotTool);
         Assert.Single(provider.GetServices<ITool>(), tool => tool is EraserTool);
         Assert.Same(provider.GetRequiredService<DrawingSession>(), provider.GetRequiredService<DrawingSession>());
+        Assert.Same(provider.GetRequiredService<DrawingDocument>(), provider.GetRequiredService<DrawingSession>().Document);
+        Assert.NotNull(provider.GetRequiredService<DocumentService>());
     }
 
     [Fact]
     public void AddCore_Null_Throws() =>
         Assert.Throws<ArgumentNullException>(() => CoreServiceCollectionExtensions.AddCore(null!));
+
+    // Ports are provided by AddInfrastructure in the app.
+    private static ServiceCollection CreateServices()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IImageDecoder>(new FakeImageDecoder());
+        return services;
+    }
 }

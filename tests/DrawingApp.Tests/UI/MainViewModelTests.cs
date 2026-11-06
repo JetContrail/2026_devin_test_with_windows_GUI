@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.IO;
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.Tools;
+using DrawingApp.Tests.Core;
 using DrawingApp.UI.ViewModels;
 
 namespace DrawingApp.Tests.UI;
@@ -9,13 +11,18 @@ namespace DrawingApp.Tests.UI;
 public sealed class MainViewModelTests : IDisposable
 {
     private readonly ToolOptions _options = new();
+    private readonly DrawingDocument _document = new();
+    private readonly FakeImageDecoder _decoder = new(40, 30);
+    private readonly FakeDialogService _dialogs = new();
+    private readonly DocumentService _documents;
     private readonly CanvasViewModel _canvas;
     private readonly MainViewModel _viewModel;
 
     public MainViewModelTests()
     {
-        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)], new DrawingDocument()));
-        _viewModel = new MainViewModel(_options, _canvas);
+        _documents = new DocumentService(_document, _decoder);
+        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)], _document));
+        _viewModel = new MainViewModel(_options, _canvas, _documents, _dialogs);
     }
 
     public void Dispose()
@@ -99,7 +106,6 @@ public sealed class MainViewModelTests : IDisposable
     [Fact]
     public void NotYetImplementedCommands_AreDisabled()
     {
-        Assert.False(_viewModel.LoadBackgroundCommand.CanExecute(null));
         Assert.False(_viewModel.SaveDrawingOnlyCommand.CanExecute(null));
         Assert.False(_viewModel.SaveCompositeCommand.CanExecute(null));
         Assert.False(_viewModel.UndoCommand.CanExecute(null));
@@ -107,10 +113,53 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
+    public void LoadBackground_ChosenFile_ResizesCanvas()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            _dialogs.OpenImagePath = path;
+
+            Assert.True(_viewModel.LoadBackgroundCommand.CanExecute(null));
+            _viewModel.LoadBackgroundCommand.Execute(null);
+
+            Assert.Equal((40, 30), (_canvas.CanvasWidth, _canvas.CanvasHeight));
+            Assert.Empty(_dialogs.Errors);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void LoadBackground_Cancelled_DoesNothing()
+    {
+        _viewModel.LoadBackgroundCommand.Execute(null);
+
+        Assert.Equal(0, _decoder.DecodeCount);
+        Assert.Equal(DrawingDocument.DefaultWidth, _canvas.CanvasWidth);
+    }
+
+    [Fact]
+    public void LoadBackground_InvalidFile_ShowsErrorAndKeepsDocument()
+    {
+        _dialogs.OpenImagePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.png");
+
+        _viewModel.LoadBackgroundCommand.Execute(null);
+
+        Assert.Single(_dialogs.Errors);
+        Assert.Contains("下絵を読み込めませんでした", _dialogs.Errors[0], StringComparison.Ordinal);
+        Assert.Equal(DrawingDocument.DefaultWidth, _canvas.CanvasWidth);
+    }
+
+    [Fact]
     public void Constructor_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => new MainViewModel(null!, _canvas));
-        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, null!));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(null!, _canvas, _documents, _dialogs));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, null!, _documents, _dialogs));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, _canvas, null!, _dialogs));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, _canvas, _documents, null!));
     }
 
     [Fact]
