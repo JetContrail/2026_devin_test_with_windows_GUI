@@ -55,4 +55,31 @@ public class PixelBufferTests
 
         Assert.All(buffer.GetBuffer(), b => Assert.Equal(255, b));
     }
+
+    [Fact]
+    public void Resized_Larger_KeepsContentAtTopLeftAndPadsTransparent()
+    {
+        var buffer = new PixelBuffer(3, 2);
+        buffer.SetPixel(2, 1, RgbaColor.Black);
+
+        var resized = buffer.Resized(5, 4);
+
+        Assert.Equal((5, 4), (resized.Width, resized.Height));
+        Assert.Equal(RgbaColor.Black, resized.GetPixel(2, 1));
+        Assert.Equal(RgbaColor.Transparent, resized.GetPixel(4, 3));
+    }
+
+    [Fact]
+    public void Resized_Smaller_CropsBottomRight()
+    {
+        var buffer = new PixelBuffer(3, 2);
+        buffer.SetPixel(0, 0, RgbaColor.White);
+        buffer.SetPixel(2, 1, RgbaColor.Black);
+
+        var resized = buffer.Resized(2, 1);
+
+        Assert.Equal((2, 1), (resized.Width, resized.Height));
+        Assert.Equal(RgbaColor.White, resized.GetPixel(0, 0));
+        Assert.Equal(RgbaColor.Transparent, resized.GetPixel(1, 0));
+    }
 }

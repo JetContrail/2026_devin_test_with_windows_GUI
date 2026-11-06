@@ -1,4 +1,5 @@
 using DrawingApp.Core.Application.Services;
+using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
 
@@ -47,12 +48,11 @@ public class EraserToolTests
     }
 
     [Fact]
-    public void ErasingDrawing_LeavesSeparateBackgroundUntouched()
+    public void ErasingDrawing_LeavesBackgroundLayerUntouched()
     {
-        var background = new PixelBuffer(DrawingSession.DefaultWidth, DrawingSession.DefaultHeight);
-        background.Fill(RgbaColor.White);
-        var before = background.GetBuffer().ToArray();
-        var session = new DrawingSession(_options, [new PenTool(_options), new EraserTool(_options)]);
+        var document = new DrawingDocument();
+        var background = document.Background.Pixels.GetBuffer().ToArray();
+        var session = new DrawingSession(_options, [new PenTool(_options), new EraserTool(_options)], document);
 
         session.BeginStroke(new CanvasPoint(100, 100));
         session.EndStroke(new CanvasPoint(200, 100));
@@ -60,7 +60,8 @@ public class EraserToolTests
         session.BeginStroke(new CanvasPoint(100, 100));
         session.EndStroke(new CanvasPoint(200, 100));
 
-        Assert.All(Enumerable.Range(100, 101), x => Assert.Equal(RgbaColor.Transparent, session.DrawingLayer.GetPixel(x, 100)));
-        Assert.Equal(before, background.GetBuffer());
+        Assert.All(Enumerable.Range(100, 101), x => Assert.Equal(RgbaColor.Transparent, document.ActiveLayer.Pixels.GetPixel(x, 100)));
+        Assert.Equal(background, document.Background.Pixels.GetBuffer());
+        Assert.Equal(RgbaColor.White, document.Background.Pixels.GetPixel(150, 100));
     }
 }

@@ -1,37 +1,40 @@
+using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
 
 namespace DrawingApp.Core.Application.Services;
 
 /// <summary>
-/// Routes pointer strokes to the active <see cref="ITool"/> and owns the editable drawing layer.
+/// Routes pointer strokes to the active <see cref="ITool"/>, which only ever edits the document's active (drawing) layer.
 /// Raises <see cref="Invalidated"/> with the changed area so views can redraw only that region.
 /// </summary>
 public sealed class DrawingSession
 {
-    public const int DefaultWidth = 1280;
-    public const int DefaultHeight = 720;
-
     private readonly ToolOptions _options;
     private readonly Dictionary<ToolKind, ITool> _tools;
 
     private ITool? _activeTool;
     private CanvasPoint _lastPoint;
 
-    public DrawingSession(ToolOptions options, IEnumerable<ITool> tools)
+    public DrawingSession(ToolOptions options, IEnumerable<ITool> tools, DrawingDocument document)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(tools);
+        ArgumentNullException.ThrowIfNull(document);
 
         _options = options;
         _tools = tools.ToDictionary(tool => tool.Kind);
-        DrawingLayer = new PixelBuffer(DefaultWidth, DefaultHeight);
+        Document = document;
+        // Buffers are replaced on reset, so an in-flight stroke is dropped rather than finished on the old buffer.
+        Document.Reset += (_, _) => _activeTool = null;
     }
 
     public event EventHandler<CanvasInvalidatedEventArgs>? Invalidated;
 
-    /// <summary>Transparent layer edited by the tools. The background is kept separately and never edited.</summary>
-    public PixelBuffer DrawingLayer { get; }
+    public DrawingDocument Document { get; }
+
+    /// <summary>Pixels of the layer edited by the tools. The background layer is never edited.</summary>
+    public PixelBuffer DrawingLayer => Document.ActiveLayer.Pixels;
 
     public bool IsStrokeActive => _activeTool is not null;
 

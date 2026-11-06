@@ -59,6 +59,19 @@ public sealed class PixelBuffer
         }
     }
 
+    /// <summary>Returns a new buffer of the given size with this content copied to its top-left corner (cropped if larger).</summary>
+    public PixelBuffer Resized(int width, int height)
+    {
+        var result = new PixelBuffer(width, height);
+        var rowBytes = Math.Min(Width, width) * BytesPerPixel;
+        for (var y = 0; y < Math.Min(Height, height); y++)
+        {
+            Buffer.BlockCopy(_pixels, y * Stride, result._pixels, y * result.Stride, rowBytes);
+        }
+
+        return result;
+    }
+
     private int OffsetOf(int x, int y)
     {
         if (!Contains(x, y))
