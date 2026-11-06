@@ -15,17 +15,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly ToolOptions _toolOptions;
     private readonly DocumentService _documents;
+    private readonly ExportService _export;
     private readonly IDialogService _dialogs;
 
-    public MainViewModel(ToolOptions toolOptions, CanvasViewModel canvas, DocumentService documents, IDialogService dialogs)
+    public MainViewModel(ToolOptions toolOptions, CanvasViewModel canvas, DocumentService documents, ExportService export, IDialogService dialogs)
     {
         ArgumentNullException.ThrowIfNull(toolOptions);
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(documents);
+        ArgumentNullException.ThrowIfNull(export);
         ArgumentNullException.ThrowIfNull(dialogs);
 
         _toolOptions = toolOptions;
         _documents = documents;
+        _export = export;
         _dialogs = dialogs;
         Canvas = canvas;
         _toolOptions.Changed += OnToolOptionsChanged;
@@ -96,17 +99,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    [RelayCommand]
+    private void SaveDrawingOnly() => Save("描画のみ保存", "drawing.png", _export.SaveDrawingOnly);
+
+    [RelayCommand]
+    private void SaveComposite() => Save("合成保存", "composite.png", _export.SaveComposite);
+
     // Commands below are wired to the menu now and implemented in later phases (see docs/Roadmap.md).
-
-    [RelayCommand(CanExecute = nameof(IsFeatureAvailable))]
-    private void SaveDrawingOnly()
-    {
-    }
-
-    [RelayCommand(CanExecute = nameof(IsFeatureAvailable))]
-    private void SaveComposite()
-    {
-    }
 
     [RelayCommand(CanExecute = nameof(IsFeatureAvailable))]
     private void Undo()
@@ -119,6 +118,24 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     private static bool IsFeatureAvailable() => false;
+
+    private void Save(string title, string defaultFileName, Action<string> save)
+    {
+        var path = _dialogs.ShowSaveImageDialog(title, defaultFileName, _export.Encoders);
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            save(path);
+        }
+        catch (ImageSaveException ex)
+        {
+            _dialogs.ShowError($"保存できませんでした。\n{ex.Message}");
+        }
+    }
 
     private void OnToolOptionsChanged(object? sender, EventArgs e)
     {
