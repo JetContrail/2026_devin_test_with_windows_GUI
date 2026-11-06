@@ -1,7 +1,9 @@
+using DrawingApp.Core.Domain.Imaging;
+
 namespace DrawingApp.Core.Domain.Tools;
 
 /// <summary>
-/// Current tool selection and per-tool brush size. Shared between the UI and the drawing session.
+/// Current tool selection, per-tool brush size and drawing color. Shared between the UI and the drawing session.
 /// </summary>
 public sealed class ToolOptions
 {
@@ -9,6 +11,7 @@ public sealed class ToolOptions
         .ToDictionary(tool => tool, BrushSizePresets.DefaultFor);
 
     private ToolKind _activeTool = ToolKind.Pen;
+    private RgbaColor _color = RgbaColor.Black;
 
     /// <summary>Raised after <see cref="ActiveTool"/> or a brush size changes.</summary>
     public event EventHandler? Changed;
@@ -33,6 +36,20 @@ public sealed class ToolOptions
 
     /// <summary>Brush size of the active tool.</summary>
     public int ActiveSize => GetSize(_activeTool);
+
+    /// <summary>Drawing color. Black in the first release; a color picker only needs to set this.</summary>
+    public RgbaColor Color
+    {
+        get => _color;
+        set
+        {
+            if (_color != value)
+            {
+                _color = value;
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
 
     public int GetSize(ToolKind tool) => _sizes.TryGetValue(tool, out var size)
         ? size

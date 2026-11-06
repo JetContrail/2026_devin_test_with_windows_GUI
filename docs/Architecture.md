@@ -56,8 +56,8 @@ Core/
     Imaging/       PixelBuffer (BGRA32), RgbaColor, PixelRect, CanvasPoint
     Layers/        Layer (abstract), BackgroundLayer, RasterLayer, LayerStack
     Documents/     DrawingDocument (キャンバスサイズ + LayerStack + 変更通知)
-    Tools/         ITool, PenTool, DotTool, EraserTool, ToolKind, ToolSettings, BrushSizePresets
-    Rasterization/ IBrushRasterizer, RoundBrushRasterizer, BlendMode (Paint / Erase)
+    Tools/         ITool, PenTool, DotTool, EraserTool, ToolKind, ToolOptions, BrushSizePresets
+    Rasterization/ RoundBrushRasterizer, BlendMode (Paint / Erase)
     History/       IUndoableOperation, PixelPatchOperation, UndoHistory
     Viewport/      ViewportState (Scale, Offset), ZoomPolicy (10%〜800%)
   Application/
@@ -90,9 +90,10 @@ classDiagram
     class RasterLayer
     class ITool {
       <<interface>>
-      +Begin(CanvasPoint)
-      +Move(CanvasPoint)
-      +End(CanvasPoint) IUndoableOperation
+      +ToolKind Kind
+      +PointerDown(PixelBuffer, CanvasPoint) PixelRect
+      +PointerMove(CanvasPoint) PixelRect
+      +PointerUp(CanvasPoint) PixelRect
     }
     class UndoHistory {
       +Push(IUndoableOperation)
@@ -115,7 +116,9 @@ classDiagram
 - **PixelBuffer**: `byte[]` の BGRA32 (非乗算 α)。WPF の `WriteableBitmap` (`Bgra32`) と同レイアウトで、表示時はコピーのみ
 - **レイヤー分離**: ツールは `DrawingDocument.ActiveLayer` (常に `RasterLayer`) のみを編集する。`BackgroundLayer` は `IsEditable=false` で、ツールへの公開 API を持たない
 - **消しゴム**: `BlendMode.Erase` で描画レイヤーの α を 0 にする。背景は別バッファのため影響しない
-- **色**: `ToolSettings.Color` (`RgbaColor`) をラスタライザへ渡す。初版は `RgbaColor.Black` 固定
+- **色**: `ToolOptions.Color` (`RgbaColor`) をストローク開始時に取得してラスタライザへ渡す。初版は `RgbaColor.Black` 固定
+- **ツール**: `ITool` の各メソッドは変更した領域 (`PixelRect`) を返す。`DrawingSession` が `ToolOptions.ActiveTool` に対応するツールへポインタ入力を振り分け、`Invalidated` イベントで差分矩形を通知する。ツールは DI で `ITool` として複数登録する (Undo 用の `IUndoableOperation` 生成は Phase6 で追加)
+- **ラスタライズ**: `RoundBrushRasterizer` はアンチエイリアスなしの円ブラシ。奇数サイズはピクセル中心、偶数サイズはピクセル角に中心をスナップし、n px ブラシが正確に n px 幅になる。線分は `max(1, サイズ/4)` px 間隔でスタンプして途切れを防ぐ
 - **ブラシサイズ**: `BrushSizePresets.Pen/Dot = {1,3,5,10,20}`, `Eraser = {10,20,50}`
 
 ### 3.2 DrawingApp.Infrastructure
@@ -159,13 +162,13 @@ sequenceDiagram
     participant H as UndoHistory
     V->>VM: PointerPressed(screen pt)
     VM->>VM: ViewportState.ScreenToCanvas
-    VM->>S: Begin(canvas pt)
-    S->>T: Begin → 円スタンプ
+    VM->>S: BeginStroke(canvas pt)
+    S->>T: PointerDown → 円スタンプ
     T->>D: ActiveLayer.Pixels 更新 / Changed(dirty)
     D-->>V: 差分矩形を WriteableBitmap へ転送
     V->>VM: PointerMoved ... (線分補間)
     V->>VM: PointerReleased
-    VM->>S: End
+    VM->>S: EndStroke → PointerUp
     S->>H: Push(PixelPatchOperation: 変更前パッチ)
 ```
 
@@ -222,7 +225,7 @@ sequenceDiagram
 
 | 将来要求 | 拡張方法 |
 |----|----|
-| 色選択 | `ToolSettings.Color` を ViewModel から変更可能にし、カラーピッカー View を追加 |
+| 色選択 | `ToolOptions.Color` を ViewModel から変更可能にし、カラーピッカー View を追加 |
 | 複数レイヤー | `LayerStack` に `RasterLayer` を追加し `ActiveLayer` を切替。合成は N レイヤー対応で設計 |
 | 表示/非表示・透明度 | `Layer.IsVisible / Opacity` を表示 (`Image.Opacity/Visibility`) と `LayerCompositor` に反映 |
 | 図形描画 | `ITool` 実装 (`RectangleTool` 等) を追加し `ToolKind` に登録 |

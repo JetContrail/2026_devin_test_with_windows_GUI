@@ -1,3 +1,4 @@
+using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
 
 namespace DrawingApp.Tests.Core;
@@ -94,4 +95,19 @@ public class ToolOptionsTests
     [Fact]
     public void GetSize_UnknownTool_Throws() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => new ToolOptions().GetSize((ToolKind)99));
+
+    [Fact]
+    public void Color_DefaultsToBlackAndRaisesOnChangeOnly()
+    {
+        var options = new ToolOptions();
+        var raised = 0;
+        options.Changed += (_, _) => raised++;
+
+        Assert.Equal(RgbaColor.Black, options.Color);
+        options.Color = RgbaColor.Black;
+        options.Color = RgbaColor.White;
+
+        Assert.Equal(1, raised);
+        Assert.Equal(RgbaColor.White, options.Color);
+    }
 }
