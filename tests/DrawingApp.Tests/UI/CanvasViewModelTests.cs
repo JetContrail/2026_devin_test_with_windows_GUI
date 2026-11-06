@@ -101,4 +101,35 @@ public sealed class CanvasViewModelTests : IDisposable
 
     [Fact]
     public void Constructor_Null_Throws() => Assert.Throws<ArgumentNullException>(() => new CanvasViewModel(null!));
+
+    [Fact]
+    public void UndoRedo_ForwardToSessionAndRaiseHistoryChanged()
+    {
+        var changed = 0;
+        _viewModel.HistoryChanged += (_, _) => changed++;
+        _viewModel.PointerDown(10, 10);
+        _viewModel.PointerUp(20, 10);
+        Assert.True(_viewModel.CanUndo);
+
+        _viewModel.Undo();
+        Assert.Equal(RgbaColor.Transparent, _viewModel.DrawingLayer.GetPixel(15, 10));
+        Assert.True(_viewModel.CanRedo);
+
+        _viewModel.Redo();
+        Assert.Equal(RgbaColor.Black, _viewModel.DrawingLayer.GetPixel(15, 10));
+        Assert.Equal(3, changed);
+    }
+
+    [Fact]
+    public void Dispose_StopsForwardingHistoryChanged()
+    {
+        var changed = 0;
+        _viewModel.HistoryChanged += (_, _) => changed++;
+        _viewModel.Dispose();
+
+        _session.BeginStroke(new CanvasPoint(10, 10));
+        _session.EndStroke(new CanvasPoint(20, 10));
+
+        Assert.Equal(0, changed);
+    }
 }

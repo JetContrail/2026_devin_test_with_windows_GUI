@@ -108,10 +108,76 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void NotYetImplementedCommands_AreDisabled()
+    public void UndoRedo_InitiallyDisabled()
     {
         Assert.False(_viewModel.UndoCommand.CanExecute(null));
         Assert.False(_viewModel.RedoCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void Undo_AfterStroke_RevertsAndEnablesRedo()
+    {
+        var notified = 0;
+        _viewModel.UndoCommand.CanExecuteChanged += (_, _) => notified++;
+        Stroke();
+        Assert.True(_viewModel.UndoCommand.CanExecute(null));
+
+        _viewModel.UndoCommand.Execute(null);
+
+        Assert.Equal(RgbaColor.Transparent, _canvas.DrawingLayer.GetPixel(10, 10));
+        Assert.False(_viewModel.UndoCommand.CanExecute(null));
+        Assert.True(_viewModel.RedoCommand.CanExecute(null));
+        Assert.Equal(2, notified);
+    }
+
+    [Fact]
+    public void Redo_ReappliesStroke()
+    {
+        Stroke();
+        _viewModel.UndoCommand.Execute(null);
+
+        _viewModel.RedoCommand.Execute(null);
+
+        Assert.Equal(RgbaColor.Black, _canvas.DrawingLayer.GetPixel(10, 10));
+        Assert.True(_viewModel.UndoCommand.CanExecute(null));
+        Assert.False(_viewModel.RedoCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void LoadBackground_ClearsUndoHistory()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            Stroke();
+            _dialogs.OpenImagePath = path;
+
+            _viewModel.LoadBackgroundCommand.Execute(null);
+
+            Assert.False(_viewModel.UndoCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Dispose_StopsHistoryNotifications()
+    {
+        var notified = 0;
+        _viewModel.UndoCommand.CanExecuteChanged += (_, _) => notified++;
+        _viewModel.Dispose();
+
+        Stroke();
+
+        Assert.Equal(0, notified);
+    }
+
+    private void Stroke()
+    {
+        _canvas.PointerDown(10, 10);
+        _canvas.PointerUp(20, 10);
     }
 
     [Fact]
