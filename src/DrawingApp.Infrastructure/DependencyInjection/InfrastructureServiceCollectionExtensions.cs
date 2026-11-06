@@ -1,4 +1,5 @@
 using DrawingApp.Core.Application.Ports;
+using DrawingApp.Infrastructure.AutoSave;
 using DrawingApp.Infrastructure.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -15,6 +16,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IImageDecoder, WicImageDecoder>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IImageEncoder, PngImageEncoder>());
+        services.TryAddSingleton<IAutoSaveStorage>(_ => new FileAutoSaveStorage(FileAutoSaveStorage.DefaultDirectory));
         return services;
     }
 }

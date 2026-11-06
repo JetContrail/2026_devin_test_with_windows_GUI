@@ -1,4 +1,5 @@
 using DrawingApp.Core.Application.Ports;
+using DrawingApp.Infrastructure.AutoSave;
 using DrawingApp.Infrastructure.DependencyInjection;
 using DrawingApp.Infrastructure.Imaging;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,15 @@ public class InfrastructureServiceCollectionExtensionsTests
         using var provider = new ServiceCollection().AddInfrastructure().AddInfrastructure().BuildServiceProvider();
 
         Assert.IsType<PngImageEncoder>(Assert.Single(provider.GetServices<IImageEncoder>()));
+    }
+
+    [Fact]
+    public void AddInfrastructure_RegistersFileAutoSaveStorageUnderLocalAppData()
+    {
+        using var provider = new ServiceCollection().AddInfrastructure().BuildServiceProvider();
+
+        var storage = Assert.IsType<FileAutoSaveStorage>(provider.GetRequiredService<IAutoSaveStorage>());
+        Assert.Equal(FileAutoSaveStorage.DefaultDirectory, storage.RootDirectory);
     }
 
     [Fact]
