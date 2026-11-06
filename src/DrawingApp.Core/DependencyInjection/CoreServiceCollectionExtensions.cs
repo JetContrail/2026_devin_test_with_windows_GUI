@@ -14,6 +14,7 @@ public static class CoreServiceCollectionExtensions
 
         services.TryAddSingleton<ToolOptions>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ITool, PenTool>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ITool, DotTool>());
         services.TryAddSingleton<DrawingSession>();
         return services;
     }
