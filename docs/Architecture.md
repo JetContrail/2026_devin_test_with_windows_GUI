@@ -127,7 +127,7 @@ classDiagram
 
 | クラス | ポート | 実装 |
 |----|----|----|
-| `WicImageDecoder` | `IImageDecoder` | `BitmapDecoder` で PNG/JPG/JPEG を読込み、`FormatConvertedBitmap` で BGRA32・96DPI に正規化 |
+| `WicImageDecoder` | `IImageDecoder` | `BitmapDecoder` で PNG/JPG/JPEG を読込み、`FormatConvertedBitmap` で BGRA32 に正規化 (ファイルの DPI は無視し、画像のピクセル数 = キャンバスのピクセル数とする)。読めないデータや 4096x4096 px 相当を超える画像は `ImageDecodeException` |
 | `PngImageEncoder` | `IImageEncoder` | `PngBitmapEncoder` で α 付き PNG を出力 |
 | `FileAutoSaveStorage` | `IAutoSaveStorage` | `%LOCALAPPDATA%\DrawingApp\AutoSave` に世代ディレクトリを作成・列挙・削除 |
 | `SystemClock` | `IClock` | `TimeProvider.System` |
