@@ -178,7 +178,8 @@ sequenceDiagram
 ### 4.2 保存
 
 - 描画のみ: `ExportService.SaveDrawingOnly(path)` → `ActiveLayer.Pixels` をそのまま `IImageEncoder(png)` へ (透過保持)
-- 合成: `LayerCompositor.Compose(LayerStack)` で可視レイヤーを下から α 合成 (`Opacity` 考慮) → PNG
+- 合成: `ExportService.SaveComposite(path)` → `LayerCompositor.Compose(LayerStack)` で可視レイヤーを下から α 合成 (ストレートα の source-over、`Opacity` を掛ける) → PNG
+- エンコーダは拡張子 (`IImageEncoder.Extensions`、大文字小文字無視) で選ぶ。`<path>.tmp` に書いてから `File.Move(overwrite)` で置き換えるので、失敗しても既存ファイルが壊れない。未対応の拡張子や書込み失敗は `ImageSaveException`
 
 ### 4.3 Undo / Redo
 
