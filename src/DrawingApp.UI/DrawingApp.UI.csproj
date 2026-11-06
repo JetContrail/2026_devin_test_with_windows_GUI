@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>DrawingApp.UI</RootNamespace>
+    <AssemblyName>DrawingApp</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DrawingApp.Core\DrawingApp.Core.csproj" />
+    <ProjectReference Include="..\DrawingApp.Infrastructure\DrawingApp.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
