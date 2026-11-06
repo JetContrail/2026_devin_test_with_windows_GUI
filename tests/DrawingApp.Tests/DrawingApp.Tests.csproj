@@ -12,6 +12,7 @@
     <UseWPF Condition="'$(IsWindowsHost)' == 'true'">true</UseWPF>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)..\..\coverage.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <ItemGroup>

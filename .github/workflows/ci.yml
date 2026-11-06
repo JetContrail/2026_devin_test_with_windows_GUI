@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  SOLUTION: DrawingApp.slnx
+
+jobs:
+  build-test:
+    name: Build & Test (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: dotnet restore
+        run: |
+          dotnet restore $env:SOLUTION
+          dotnet tool restore
+
+      - name: dotnet format (verify)
+        run: dotnet format $env:SOLUTION --verify-no-changes --no-restore
+
+      - name: dotnet build
+        # TreatWarningsAsErrors (Directory.Build.props) makes any compiler/analyzer warning fail the build.
+        run: dotnet build $env:SOLUTION --configuration Release --no-restore
+
+      - name: dotnet test
+        run: >
+          dotnet test $env:SOLUTION --configuration Release --no-build
+          --logger trx --results-directory TestResults
+          --collect "XPlat Code Coverage"
+
+      - name: Coverage report
+        if: ${{ !cancelled() && hashFiles('TestResults/*/coverage.cobertura.xml') != '' }}
+        run: |
+          dotnet reportgenerator "-reports:TestResults/*/coverage.cobertura.xml" "-targetdir:coverage" "-reporttypes:HtmlInline;MarkdownSummaryGithub;Cobertura"
+          Get-Content coverage/SummaryGithub.md | Add-Content $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload test results and coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            TestResults/**/*.trx
+            coverage/
+          if-no-files-found: warn
