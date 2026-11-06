@@ -1,4 +1,6 @@
+using DrawingApp.Core.Application.Ports;
 using DrawingApp.Infrastructure.DependencyInjection;
+using DrawingApp.Infrastructure.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DrawingApp.Tests.Infrastructure;
@@ -11,6 +13,14 @@ public class InfrastructureServiceCollectionExtensionsTests
         using var provider = new ServiceCollection().AddInfrastructure().BuildServiceProvider();
 
         Assert.Same(TimeProvider.System, provider.GetRequiredService<TimeProvider>());
+    }
+
+    [Fact]
+    public void AddInfrastructure_RegistersWicImageDecoder()
+    {
+        using var provider = new ServiceCollection().AddInfrastructure().BuildServiceProvider();
+
+        Assert.IsType<WicImageDecoder>(provider.GetRequiredService<IImageDecoder>());
     }
 
     [Fact]

@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>DrawingApp.Infrastructure</RootNamespace>
+    <!-- WPF imaging (WIC) for PNG/JPEG decoding and encoding. -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>

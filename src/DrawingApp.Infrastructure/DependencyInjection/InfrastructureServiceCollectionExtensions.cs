@@ -1,3 +1,5 @@
+using DrawingApp.Core.Application.Ports;
+using DrawingApp.Infrastructure.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -11,6 +13,7 @@ public static class InfrastructureServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton<IImageDecoder, WicImageDecoder>();
         return services;
     }
 }
