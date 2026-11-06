@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:DrawingApp.UI.ViewModels"
+        xmlns:views="clr-namespace:DrawingApp.UI.Views"
         xmlns:tools="clr-namespace:DrawingApp.Core.Domain.Tools;assembly=DrawingApp.Core"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
@@ -65,7 +66,10 @@
             </ToolBar>
         </ToolBarTray>
 
-        <!-- Drawing canvas is added in Phase 2 (#6). -->
-        <Border Background="#FF808080" />
+        <!-- Scrolling/zooming is handled by the viewport in Phase 7; until then the canvas is shown at 100%. -->
+        <Border Background="#FF808080" ClipToBounds="True">
+            <views:DrawingCanvas DataContext="{Binding Canvas}" Margin="8"
+                                 HorizontalAlignment="Left" VerticalAlignment="Top" />
+        </Border>
     </DockPanel>
 </Window>

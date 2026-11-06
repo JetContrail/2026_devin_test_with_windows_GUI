@@ -16,6 +16,7 @@ public class AppHostTests
         var viewModel = host.Services.GetRequiredService<MainViewModel>();
 
         Assert.Same(viewModel, host.Services.GetRequiredService<MainViewModel>());
+        Assert.Same(host.Services.GetRequiredService<CanvasViewModel>(), viewModel.Canvas);
         Assert.Same(host.Services.GetRequiredService<ToolOptions>(), host.Services.GetRequiredService<ToolOptions>());
         Assert.Same(TimeProvider.System, host.Services.GetRequiredService<TimeProvider>());
     }

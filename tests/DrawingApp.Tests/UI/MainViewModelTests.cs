@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.UI.ViewModels;
 
@@ -7,11 +8,20 @@ namespace DrawingApp.Tests.UI;
 public sealed class MainViewModelTests : IDisposable
 {
     private readonly ToolOptions _options = new();
+    private readonly CanvasViewModel _canvas;
     private readonly MainViewModel _viewModel;
 
-    public MainViewModelTests() => _viewModel = new MainViewModel(_options);
+    public MainViewModelTests()
+    {
+        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)]));
+        _viewModel = new MainViewModel(_options, _canvas);
+    }
 
-    public void Dispose() => _viewModel.Dispose();
+    public void Dispose()
+    {
+        _viewModel.Dispose();
+        _canvas.Dispose();
+    }
 
     [Fact]
     public void Initial_State_ShowsPenAnd100Percent()
@@ -22,6 +32,7 @@ public sealed class MainViewModelTests : IDisposable
         Assert.False(_viewModel.IsDotActive);
         Assert.False(_viewModel.IsEraserActive);
         Assert.Equal("100%", _viewModel.ZoomText);
+        Assert.Same(_canvas, _viewModel.Canvas);
     }
 
     [Fact]
@@ -95,8 +106,11 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void Constructor_Null_Throws() =>
-        Assert.Throws<ArgumentNullException>(() => new MainViewModel(null!));
+    public void Constructor_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(null!, _canvas));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, null!));
+    }
 
     [Fact]
     public void ImplementsINotifyPropertyChanged() =>

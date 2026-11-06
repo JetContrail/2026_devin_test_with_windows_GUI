@@ -12,15 +12,19 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly ToolOptions _toolOptions;
 
-    public MainViewModel(ToolOptions toolOptions)
+    public MainViewModel(ToolOptions toolOptions, CanvasViewModel canvas)
     {
         ArgumentNullException.ThrowIfNull(toolOptions);
+        ArgumentNullException.ThrowIfNull(canvas);
 
         _toolOptions = toolOptions;
+        Canvas = canvas;
         _toolOptions.Changed += OnToolOptionsChanged;
     }
 
     public string Title => "DrawingApp";
+
+    public CanvasViewModel Canvas { get; }
 
     public IReadOnlyList<int> PenSizes => BrushSizePresets.Pen;
 
