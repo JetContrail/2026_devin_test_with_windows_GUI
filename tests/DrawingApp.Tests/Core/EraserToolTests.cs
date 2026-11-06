@@ -1,5 +1,6 @@
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Documents;
+using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
 
@@ -52,7 +53,7 @@ public class EraserToolTests
     {
         var document = new DrawingDocument();
         var background = document.Background.Pixels.GetBuffer().ToArray();
-        var session = new DrawingSession(_options, [new PenTool(_options), new EraserTool(_options)], document);
+        var session = new DrawingSession(_options, [new PenTool(_options), new EraserTool(_options)], document, new UndoHistory());
 
         session.BeginStroke(new CanvasPoint(100, 100));
         session.EndStroke(new CanvasPoint(200, 100));

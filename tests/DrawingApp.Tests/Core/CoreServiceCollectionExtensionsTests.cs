@@ -2,6 +2,7 @@ using DrawingApp.Core.Application.Ports;
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.DependencyInjection;
 using DrawingApp.Core.Domain.Documents;
+using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Tools;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +30,8 @@ public class CoreServiceCollectionExtensionsTests
         Assert.Single(provider.GetServices<ITool>(), tool => tool is EraserTool);
         Assert.Same(provider.GetRequiredService<DrawingSession>(), provider.GetRequiredService<DrawingSession>());
         Assert.Same(provider.GetRequiredService<DrawingDocument>(), provider.GetRequiredService<DrawingSession>().Document);
+        Assert.Same(provider.GetRequiredService<UndoHistory>(), provider.GetRequiredService<DrawingSession>().History);
+        Assert.Equal(UndoHistory.DefaultCapacity, provider.GetRequiredService<UndoHistory>().Capacity);
         Assert.NotNull(provider.GetRequiredService<DocumentService>());
         Assert.NotNull(provider.GetRequiredService<ExportService>());
     }

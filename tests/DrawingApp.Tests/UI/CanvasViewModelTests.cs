@@ -1,5 +1,6 @@
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Documents;
+using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.UI.ViewModels;
@@ -15,7 +16,7 @@ public sealed class CanvasViewModelTests : IDisposable
 
     public CanvasViewModelTests()
     {
-        _session = new DrawingSession(_options, [new PenTool(_options)], new DrawingDocument());
+        _session = new DrawingSession(_options, [new PenTool(_options)], new DrawingDocument(), new UndoHistory());
         _viewModel = new CanvasViewModel(_session);
         _viewModel.Invalidated += (_, e) => _invalidated.Add(e.Area);
     }

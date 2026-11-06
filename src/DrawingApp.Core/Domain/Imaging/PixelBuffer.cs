@@ -72,6 +72,24 @@ public sealed class PixelBuffer
         return result;
     }
 
+    /// <summary>Copies <paramref name="area"/> (clipped to the bounds) from a buffer of the same size.</summary>
+    public void CopyFrom(PixelBuffer source, PixelRect area)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        if (source.Width != Width || source.Height != Height)
+        {
+            throw new ArgumentException($"Source is {source.Width}x{source.Height}, expected {Width}x{Height}.", nameof(source));
+        }
+
+        var clipped = area.Intersect(Bounds);
+        var rowBytes = clipped.Width * BytesPerPixel;
+        for (var y = clipped.Y; y < clipped.Bottom; y++)
+        {
+            var offset = (y * Stride) + (clipped.X * BytesPerPixel);
+            Buffer.BlockCopy(source._pixels, offset, _pixels, offset, rowBytes);
+        }
+    }
+
     private int OffsetOf(int x, int y)
     {
         if (!Contains(x, y))
