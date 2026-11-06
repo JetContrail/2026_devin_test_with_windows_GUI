@@ -6,15 +6,35 @@
              xmlns:vm="clr-namespace:DrawingApp.UI.ViewModels"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:CanvasViewModel}"
-             Width="{Binding CanvasWidth, Mode=OneWay}"
-             Height="{Binding CanvasHeight, Mode=OneWay}"
-             Cursor="Cross">
-    <Grid x:Name="Surface"
-          MouseLeftButtonDown="OnMouseLeftButtonDown"
-          MouseMove="OnMouseMove"
-          MouseLeftButtonUp="OnMouseLeftButtonUp"
-          LostMouseCapture="OnLostMouseCapture">
-        <Image x:Name="BackgroundImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
-        <Image x:Name="DrawingImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
-    </Grid>
+             Background="#FF808080"
+             ClipToBounds="True"
+             Focusable="True"
+             FocusVisualStyle="{x:Null}"
+             PreviewMouseLeftButtonDown="OnPreviewMouseLeftButtonDown"
+             MouseDown="OnMouseDown"
+             MouseMove="OnViewportMouseMove"
+             MouseUp="OnMouseUp"
+             MouseWheel="OnMouseWheel"
+             LostMouseCapture="OnViewportLostMouseCapture">
+    <!-- Viewport coordinates (zoom anchor, pan) are measured relative to this panel. -->
+    <Canvas x:Name="Viewport" Margin="8">
+        <!-- screen = canvas * Scale + Offset; mouse positions read from Surface are therefore already canvas pixels. -->
+        <Grid x:Name="Surface"
+              Width="{Binding CanvasWidth, Mode=OneWay}"
+              Height="{Binding CanvasHeight, Mode=OneWay}"
+              Cursor="Cross"
+              MouseLeftButtonDown="OnMouseLeftButtonDown"
+              MouseMove="OnMouseMove"
+              MouseLeftButtonUp="OnMouseLeftButtonUp"
+              LostMouseCapture="OnLostMouseCapture">
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="{Binding Scale, Mode=OneWay}" ScaleY="{Binding Scale, Mode=OneWay}" />
+                    <TranslateTransform X="{Binding OffsetX, Mode=OneWay}" Y="{Binding OffsetY, Mode=OneWay}" />
+                </TransformGroup>
+            </Grid.RenderTransform>
+            <Image x:Name="BackgroundImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+            <Image x:Name="DrawingImage" Stretch="None" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+        </Grid>
+    </Canvas>
 </UserControl>

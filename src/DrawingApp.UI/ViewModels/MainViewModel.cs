@@ -33,6 +33,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Canvas = canvas;
         _toolOptions.Changed += OnToolOptionsChanged;
         Canvas.HistoryChanged += OnHistoryChanged;
+        Canvas.ViewportChanged += OnViewportChanged;
     }
 
     public string Title => "DrawingApp";
@@ -71,8 +72,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         set => _toolOptions.SetSize(ToolKind.Eraser, value);
     }
 
-    /// <summary>Zoom factor (1.0 = 100%). Becomes interactive in Phase 7.</summary>
-    public double ZoomFactor => 1.0;
+    /// <summary>Zoom factor (1.0 = 100%).</summary>
+    public double ZoomFactor => Canvas.Scale;
 
     public string ZoomText => $"{ZoomFactor * 100:0}%";
 
@@ -80,6 +81,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         _toolOptions.Changed -= OnToolOptionsChanged;
         Canvas.HistoryChanged -= OnHistoryChanged;
+        Canvas.ViewportChanged -= OnViewportChanged;
     }
 
     [RelayCommand]
@@ -142,6 +144,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
+    }
+
+    private void OnViewportChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(ZoomFactor));
+        OnPropertyChanged(nameof(ZoomText));
     }
 
     private void OnToolOptionsChanged(object? sender, EventArgs e)

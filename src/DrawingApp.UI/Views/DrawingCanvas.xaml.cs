@@ -8,7 +8,10 @@ using DrawingApp.UI.ViewModels;
 
 namespace DrawingApp.UI.Views;
 
-/// <summary>Displays the layers and translates mouse input into canvas-pixel pointer events.</summary>
+/// <summary>
+/// Displays the layers through the zoom/pan transform and translates mouse input into canvas-pixel pointer events,
+/// wheel zoom, and middle-button or Space+left-button panning.
+/// </summary>
 [ExcludeFromCodeCoverage(Justification = "XAML view; logic lives in CanvasViewModel and LayerBitmapPresenter.")]
 public partial class DrawingCanvas : UserControl
 {
@@ -85,4 +88,88 @@ public partial class DrawingCanvas : UserControl
     }
 
     private void OnLostMouseCapture(object sender, MouseEventArgs e) => _viewModel?.CancelPointer();
+
+    private void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Keep Space away from toolbar buttons, which would otherwise be "clicked" by it.
+        Focus();
+        if (Keyboard.IsKeyDown(Key.Space) && StartPan(e))
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void OnMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Middle && StartPan(e))
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void OnViewportMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_viewModel is { IsPanning: true })
+        {
+            var p = e.GetPosition(Viewport);
+            _viewModel.PanTo(p.X, p.Y);
+        }
+    }
+
+    private void OnMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_viewModel is { IsPanning: true } && e.ChangedButton is MouseButton.Middle or MouseButton.Left)
+        {
+            EndPan();
+            e.Handled = true;
+        }
+    }
+
+    private void OnMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (_viewModel is null)
+        {
+            return;
+        }
+
+        var p = e.GetPosition(Viewport);
+        _viewModel.Zoom(p.X, p.Y, e.Delta);
+        e.Handled = true;
+    }
+
+    private void OnViewportLostMouseCapture(object sender, MouseEventArgs e)
+    {
+        if (_viewModel is { IsPanning: true } && !IsMouseCaptured)
+        {
+            EndPan();
+        }
+    }
+
+    private bool StartPan(MouseButtonEventArgs e)
+    {
+        var p = e.GetPosition(Viewport);
+        if (_viewModel is null || !_viewModel.BeginPan(p.X, p.Y))
+        {
+            return false;
+        }
+
+        if (!CaptureMouse())
+        {
+            _viewModel.EndPan();
+            return false;
+        }
+
+        Cursor = Cursors.SizeAll;
+        return true;
+    }
+
+    private void EndPan()
+    {
+        _viewModel?.EndPan();
+        ClearValue(CursorProperty);
+        if (IsMouseCaptured)
+        {
+            ReleaseMouseCapture();
+        }
+    }
 }

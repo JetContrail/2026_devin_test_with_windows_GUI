@@ -3,6 +3,7 @@ using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
+using DrawingApp.Core.Domain.Viewport;
 using DrawingApp.UI.ViewModels;
 
 namespace DrawingApp.Tests.UI;
@@ -11,13 +12,14 @@ public sealed class CanvasViewModelTests : IDisposable
 {
     private readonly ToolOptions _options = new();
     private readonly DrawingSession _session;
+    private readonly ViewportState _viewport = new();
     private readonly CanvasViewModel _viewModel;
     private readonly List<PixelRect> _invalidated = [];
 
     public CanvasViewModelTests()
     {
         _session = new DrawingSession(_options, [new PenTool(_options)], new DrawingDocument(), new UndoHistory());
-        _viewModel = new CanvasViewModel(_session);
+        _viewModel = new CanvasViewModel(_session, _viewport);
         _viewModel.Invalidated += (_, e) => _invalidated.Add(e.Area);
     }
 
@@ -100,7 +102,90 @@ public sealed class CanvasViewModelTests : IDisposable
     }
 
     [Fact]
-    public void Constructor_Null_Throws() => Assert.Throws<ArgumentNullException>(() => new CanvasViewModel(null!));
+    public void Constructor_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => new CanvasViewModel(null!, _viewport));
+        Assert.Throws<ArgumentNullException>(() => new CanvasViewModel(_session, null!));
+    }
+
+    [Fact]
+    public void Zoom_OneNotch_ChangesScaleAroundCursorAndNotifies()
+    {
+        var changed = new List<string?>();
+        _viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var viewportChanged = 0;
+        _viewModel.ViewportChanged += (_, _) => viewportChanged++;
+
+        _viewModel.Zoom(100, 50, CanvasViewModel.WheelDeltaPerNotch);
+
+        Assert.Equal(1.25, _viewModel.Scale);
+        Assert.Equal(new CanvasPoint(100, 50), _viewport.ScreenToCanvas(100, 50));
+        Assert.Equal((-25.0, -12.5), (_viewModel.OffsetX, _viewModel.OffsetY));
+        Assert.Contains(nameof(CanvasViewModel.Scale), changed);
+        Assert.Contains(nameof(CanvasViewModel.OffsetX), changed);
+        Assert.Equal(1, viewportChanged);
+    }
+
+    [Fact]
+    public void Zoom_PartialDeltas_AccumulateToOneNotch()
+    {
+        _viewModel.Zoom(0, 0, 60);
+        Assert.Equal(1.0, _viewModel.Scale);
+
+        _viewModel.Zoom(0, 0, 60);
+        Assert.Equal(1.25, _viewModel.Scale);
+
+        _viewModel.Zoom(0, 0, -2 * CanvasViewModel.WheelDeltaPerNotch);
+        Assert.Equal(0.75, _viewModel.Scale);
+    }
+
+    [Fact]
+    public void Pan_MovesOffsetByDragDistance()
+    {
+        Assert.True(_viewModel.BeginPan(10, 10));
+        _viewModel.PanTo(15, 30);
+        _viewModel.PanTo(25, 20);
+        _viewModel.EndPan();
+        _viewModel.PanTo(100, 100);
+
+        Assert.False(_viewModel.IsPanning);
+        Assert.Equal((15.0, 10.0), (_viewModel.OffsetX, _viewModel.OffsetY));
+    }
+
+    [Fact]
+    public void BeginPan_DuringStrokeOrPan_IsRefused()
+    {
+        _viewModel.PointerDown(10, 10);
+        Assert.False(_viewModel.BeginPan(0, 0));
+        _viewModel.PointerUp(10, 10);
+
+        Assert.True(_viewModel.BeginPan(0, 0));
+        Assert.False(_viewModel.BeginPan(5, 5));
+    }
+
+    [Fact]
+    public void LayersReset_ResetsViewportAndPan()
+    {
+        _viewModel.Zoom(10, 10, CanvasViewModel.WheelDeltaPerNotch);
+        _viewModel.BeginPan(0, 0);
+
+        _session.Document.LoadBackground(new PixelBuffer(30, 20));
+
+        Assert.Equal((1.0, 0.0, 0.0), (_viewModel.Scale, _viewModel.OffsetX, _viewModel.OffsetY));
+        Assert.False(_viewModel.IsPanning);
+    }
+
+    [Fact]
+    public void Dispose_StopsForwardingViewportChanges()
+    {
+        var changed = 0;
+        _viewModel.ViewportChanged += (_, _) => changed++;
+        _viewModel.Dispose();
+
+        _viewport.PanBy(1, 1);
+
+        Assert.Equal(0, changed);
+    }
 
     [Fact]
     public void UndoRedo_ForwardToSessionAndRaiseHistoryChanged()
