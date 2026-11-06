@@ -24,6 +24,14 @@ public class InfrastructureServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddInfrastructure_RegistersPngEncoderOnce()
+    {
+        using var provider = new ServiceCollection().AddInfrastructure().AddInfrastructure().BuildServiceProvider();
+
+        Assert.IsType<PngImageEncoder>(Assert.Single(provider.GetServices<IImageEncoder>()));
+    }
+
+    [Fact]
     public void AddInfrastructure_Null_Throws() =>
         Assert.Throws<ArgumentNullException>(() => InfrastructureServiceCollectionExtensions.AddInfrastructure(null!));
 }

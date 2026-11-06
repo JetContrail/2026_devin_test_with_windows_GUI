@@ -14,6 +14,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IImageDecoder, WicImageDecoder>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IImageEncoder, PngImageEncoder>());
         return services;
     }
 }
