@@ -74,3 +74,18 @@ jobs:
             TestResults/**/*.trx
             coverage/
           if-no-files-found: warn
+
+      - name: dotnet publish (win-x64, self-contained)
+        run: >
+          dotnet publish src/DrawingApp.UI --configuration Release
+          --runtime win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none
+          --output publish/DrawingApp
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: DrawingApp-win-x64
+          path: publish/DrawingApp/
+          retention-days: 14
+          if-no-files-found: error
