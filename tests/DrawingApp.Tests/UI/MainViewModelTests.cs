@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.IO;
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Documents;
+using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.Tests.Core;
 using DrawingApp.UI.ViewModels;
@@ -15,14 +16,16 @@ public sealed class MainViewModelTests : IDisposable
     private readonly FakeImageDecoder _decoder = new(40, 30);
     private readonly FakeDialogService _dialogs = new();
     private readonly DocumentService _documents;
+    private readonly ExportService _export;
     private readonly CanvasViewModel _canvas;
     private readonly MainViewModel _viewModel;
 
     public MainViewModelTests()
     {
         _documents = new DocumentService(_document, _decoder);
+        _export = new ExportService(_document, [new FakeImageEncoder()]);
         _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)], _document));
-        _viewModel = new MainViewModel(_options, _canvas, _documents, _dialogs);
+        _viewModel = new MainViewModel(_options, _canvas, _documents, _export, _dialogs);
     }
 
     public void Dispose()
@@ -106,8 +109,6 @@ public sealed class MainViewModelTests : IDisposable
     [Fact]
     public void NotYetImplementedCommands_AreDisabled()
     {
-        Assert.False(_viewModel.SaveDrawingOnlyCommand.CanExecute(null));
-        Assert.False(_viewModel.SaveCompositeCommand.CanExecute(null));
         Assert.False(_viewModel.UndoCommand.CanExecute(null));
         Assert.False(_viewModel.RedoCommand.CanExecute(null));
     }
@@ -154,12 +155,71 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
+    public void SaveDrawingOnly_WritesDrawingLayerToChosenFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.raw");
+        _document.ActiveLayer.Pixels.SetPixel(0, 0, RgbaColor.Black);
+        _dialogs.SaveImagePath = path;
+        try
+        {
+            _viewModel.SaveDrawingOnlyCommand.Execute(null);
+
+            var request = Assert.Single(_dialogs.SaveRequests);
+            Assert.Equal(("描画のみ保存", "drawing.png"), (request.Title, request.DefaultFileName));
+            Assert.Same(_export.Encoders, request.Encoders);
+            Assert.Equal(_document.ActiveLayer.Pixels.GetBuffer(), FakeImageEncoder.Read(path).GetBuffer());
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SaveComposite_WritesFlattenedImage()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.raw");
+        _dialogs.SaveImagePath = path;
+        try
+        {
+            _viewModel.SaveCompositeCommand.Execute(null);
+
+            Assert.Equal("composite.png", Assert.Single(_dialogs.SaveRequests).DefaultFileName);
+            Assert.Equal(RgbaColor.White, FakeImageEncoder.Read(path).GetPixel(0, 0));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Save_Cancelled_WritesNothing()
+    {
+        _viewModel.SaveCompositeCommand.Execute(null);
+
+        Assert.Single(_dialogs.SaveRequests);
+        Assert.Empty(_dialogs.Errors);
+    }
+
+    [Fact]
+    public void Save_Failure_ShowsError()
+    {
+        _dialogs.SaveImagePath = Path.Combine(Path.GetTempPath(), "unsupported.bmp");
+
+        _viewModel.SaveDrawingOnlyCommand.Execute(null);
+
+        Assert.Contains("保存できませんでした", Assert.Single(_dialogs.Errors), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Constructor_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => new MainViewModel(null!, _canvas, _documents, _dialogs));
-        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, null!, _documents, _dialogs));
-        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, _canvas, null!, _dialogs));
-        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, _canvas, _documents, null!));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(null!, _canvas, _documents, _export, _dialogs));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, null!, _documents, _export, _dialogs));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, _canvas, null!, _export, _dialogs));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, _canvas, _documents, null!, _dialogs));
+        Assert.Throws<ArgumentNullException>(() => new MainViewModel(_options, _canvas, _documents, _export, null!));
     }
 
     [Fact]
