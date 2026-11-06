@@ -3,7 +3,7 @@ using DrawingApp.Core.Domain.Documents;
 
 namespace DrawingApp.Core.Application.Services;
 
-/// <summary>Document-level use cases (background loading; saving follows in Phase 5).</summary>
+/// <summary>Document-level use cases (background loading).</summary>
 public sealed class DocumentService
 {
     private readonly DrawingDocument _document;
@@ -36,7 +36,7 @@ public sealed class DocumentService
 
         using (stream)
         {
-            LoadBackground(stream);
+            _document.LoadBackground(_decoder.Decode(stream), Path.GetFullPath(path));
         }
     }
 

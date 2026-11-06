@@ -30,6 +30,7 @@ public sealed class DocumentServiceTests : IDisposable
         Assert.Equal((64, 32), (_document.Width, _document.Height));
         Assert.Equal(new RgbaColor(10, 20, 30), _document.Background.Pixels.GetPixel(0, 0));
         Assert.Equal(RgbaColor.Transparent, _document.ActiveLayer.Pixels.GetPixel(0, 0));
+        Assert.Equal(Path.GetFullPath(_path), _document.BackgroundPath);
     }
 
     [Fact]
