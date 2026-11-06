@@ -61,8 +61,9 @@ Core/
     History/       IUndoableOperation, PixelPatch, PixelPatchOperation, UndoHistory
     Viewport/      ViewportState (Scale, Offset, ZoomAt, PanBy, ScreenToCanvas), ZoomPolicy (10%〜800% の段階テーブル)
   Application/
-    Ports/         IImageDecoder, IImageEncoder, IImageEncoderRegistry, IAutoSaveStorage, IClock
-    Services/      DrawingSession, DocumentService, ExportService, LayerCompositor, AutoSaveService
+    Ports/         IImageDecoder, IImageEncoder, IImageEncoderRegistry, IAutoSaveStorage (時刻は BCL の TimeProvider)
+    Services/      DrawingSession, DocumentService, ExportService, LayerCompositor
+    AutoSave/      AutoSaveService, AutoSaveOptions, AutoSaveManifest
   DependencyInjection/ CoreServiceCollectionExtensions.AddCore()
 ```
 
@@ -131,7 +132,7 @@ classDiagram
 | `WicImageDecoder` | `IImageDecoder` | `BitmapDecoder` で PNG/JPG/JPEG を読込み、`FormatConvertedBitmap` で BGRA32 に正規化 (ファイルの DPI は無視し、画像のピクセル数 = キャンバスのピクセル数とする)。読めないデータや 4096x4096 px 相当を超える画像は `ImageDecodeException` |
 | `PngImageEncoder` | `IImageEncoder` (`FormatId`=`png`, `Extensions`=`.png`) | `BitmapSource.Create(Bgra32)` → `PngBitmapEncoder` で α 付き 32bit PNG を出力。`TryAddEnumerable` で登録し、形式は複数登録できる |
 | `FileAutoSaveStorage` | `IAutoSaveStorage` | `%LOCALAPPDATA%\DrawingApp\AutoSave` に世代ディレクトリを作成・列挙・削除 |
-| `SystemClock` | `IClock` | `TimeProvider.System` |
+| `TimeProvider.System` | `TimeProvider` | 現在時刻・タイマー (テストでは `FakeTimeProvider`) |
 
 `AddInfrastructure()` で登録する。
 
@@ -213,24 +214,27 @@ sequenceDiagram
     participant D as DrawingDocument
     participant St as IAutoSaveStorage
     Tm->>A: Tick
-    A->>D: IsDirtySinceLastAutoSave?
+    A->>A: IsDirty? (UndoHistory.Changed / DrawingDocument.Reset で true)
     alt 変更あり
-      A->>D: Snapshot (UI スレッド, バッファ複製)
-      A->>St: Save(PNG + manifest.json) バックグラウンド, 一時名→リネーム
-      A->>St: 世代 > 10 の古いものを削除
+      A->>D: 描画レイヤーを複製 (UI スレッド)
+      A->>St: WriteGeneration(id, drawing.png + manifest.json) (Task.Run でエンコード・書込)
+      A->>St: ListGenerations → 新しい MaxGenerations 件を残して DeleteGeneration
     end
 ```
 
-- 周期・世代数・保存先は `AutoSaveOptions` (DI の Options パターン) で設定可能
-- 例外はログ出力のみでアプリを落とさない
+- `AutoSaveService.RunAsync(ct)` が `PeriodicTimer(Interval, TimeProvider)` で周期実行する。UI スレッドから呼ぶので、`await` 後の複製は UI スレッドで行われ、描画中のバッファと競合しない
+- 世代 id は保存時刻 (UTC) `yyyyMMddTHHmmssfffZ`。序数順 = 時系列順なので、世代管理 (古い順に削除) は Core で行い全 OS でテストする。`IAutoSaveStorage` はファイルの書込・列挙・削除だけを担う
+- `manifest.json`: `savedAt`, `width`, `height`, `drawingFile`, `backgroundPath` (`DocumentService.LoadBackground(path)` が記録。初期の白背景は null)
+- 前回保存以降に変更がなければ書き込まない。書込失敗 (`IOException` / `UnauthorizedAccessException`) はログを残して未保存のまま扱い、次の周期で再試行する。古い世代の削除失敗もログのみ。いずれもアプリを落とさない
+- `AutoSaveOptions`: `Interval` (既定 60 秒), `MaxGenerations` (既定 10), `ImageFormatId` (既定 `png`)。保存先は `IAutoSaveStorage` の実装 (`FileAutoSaveStorage`) が持つ
 
 ## 5. DI 登録とライフタイム
 
 | サービス | ライフタイム | 登録元 |
 |----|----|----|
 | `DrawingDocument`, `UndoHistory`, `DrawingSession` | Singleton (1 ウィンドウ = 1 ドキュメント) | `AddCore()` |
-| `DocumentService`, `ExportService`, `LayerCompositor`, `AutoSaveService` | Singleton | `AddCore()` |
-| `IImageDecoder`, `IImageEncoder` (複数), `IAutoSaveStorage`, `IClock` | Singleton | `AddInfrastructure()` |
+| `DocumentService`, `ExportService`, `AutoSaveService`, `AutoSaveOptions` | Singleton | `AddCore()` (`LayerCompositor` は static) |
+| `IImageDecoder`, `IImageEncoder` (複数), `IAutoSaveStorage`, `TimeProvider` | Singleton | `AddInfrastructure()` |
 | `MainWindow`, `MainViewModel`, 子 ViewModel, `IDialogService` | Singleton | `AddUi()` |
 
 `ServiceProviderOptions.ValidateOnBuild/ValidateScopes = true` で起動時に登録漏れを検出し、同等の検証を Unit Test でも行う。
