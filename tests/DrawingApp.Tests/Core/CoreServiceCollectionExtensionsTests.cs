@@ -4,6 +4,7 @@ using DrawingApp.Core.DependencyInjection;
 using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Tools;
+using DrawingApp.Core.Domain.Viewport;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DrawingApp.Tests.Core;
@@ -34,6 +35,7 @@ public class CoreServiceCollectionExtensionsTests
         Assert.Equal(UndoHistory.DefaultCapacity, provider.GetRequiredService<UndoHistory>().Capacity);
         Assert.NotNull(provider.GetRequiredService<DocumentService>());
         Assert.NotNull(provider.GetRequiredService<ExportService>());
+        Assert.Same(provider.GetRequiredService<ViewportState>(), provider.GetRequiredService<ViewportState>());
     }
 
     [Fact]

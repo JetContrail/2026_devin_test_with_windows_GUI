@@ -59,7 +59,7 @@ Core/
     Tools/         ITool, StrokeTool (PenTool / EraserTool), DotTool, ToolKind, ToolOptions, BrushSizePresets
     Rasterization/ RoundBrushRasterizer, BlendMode (Paint / Erase)
     History/       IUndoableOperation, PixelPatch, PixelPatchOperation, UndoHistory
-    Viewport/      ViewportState (Scale, Offset), ZoomPolicy (10%〜800%)
+    Viewport/      ViewportState (Scale, Offset, ZoomAt, PanBy, ScreenToCanvas), ZoomPolicy (10%〜800% の段階テーブル)
   Application/
     Ports/         IImageDecoder, IImageEncoder, IImageEncoderRegistry, IAutoSaveStorage, IClock
     Services/      DrawingSession, DocumentService, ExportService, LayerCompositor, AutoSaveService
@@ -195,7 +195,10 @@ sequenceDiagram
 ### 4.4 ズーム / パン
 
 - `ZoomPolicy`: 段階テーブル `10,15,20,25,33,50,67,75,100,125,150,200,300,400,600,800 (%)`。ホイール 1 ノッチで 1 段階
-- カーソル位置アンカー: `offset' = cursor - (cursor - offset) * (scale' / scale)` (純粋関数として Core でテスト)
+- 座標系: `screen = canvas * Scale + Offset`。`ViewportState.ScreenToCanvas` がその逆変換
+- `ZoomPolicy.Step(current, notches)`: 正なら current より大きい段階へ、負なら小さい段階へ notches 段移動し、表の端で止まる (表にない倍率は進む方向の次の段階へ寄せる)
+- カーソル位置アンカー: `ViewportState.ZoomAt(cursor, notches)` が `offset' = cursor - (cursor - offset) * (scale' / scale)` で Offset を更新する (Core でテスト)。倍率が変わらない (端に達している) ときは何もしない
+- `ViewportState` は `AddCore()` で Singleton 登録し、`Changed` イベントで View に通知する
 - パン: 中ボタンドラッグ、または Space 押下中の左ドラッグで `Offset` を加算
 
 ### 4.5 オートセーブ
