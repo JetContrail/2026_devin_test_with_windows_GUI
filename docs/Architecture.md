@@ -56,7 +56,7 @@ Core/
     Imaging/       PixelBuffer (BGRA32), RgbaColor, PixelRect, CanvasPoint
     Layers/        Layer (abstract), BackgroundLayer, RasterLayer, LayerStack
     Documents/     DrawingDocument (キャンバスサイズ + LayerStack + 変更通知)
-    Tools/         ITool, PenTool, DotTool, EraserTool, ToolKind, ToolOptions, BrushSizePresets
+    Tools/         ITool, StrokeTool (PenTool / EraserTool), DotTool, ToolKind, ToolOptions, BrushSizePresets
     Rasterization/ RoundBrushRasterizer, BlendMode (Paint / Erase)
     History/       IUndoableOperation, PixelPatchOperation, UndoHistory
     Viewport/      ViewportState (Scale, Offset), ZoomPolicy (10%〜800%)
@@ -106,9 +106,10 @@ classDiagram
     LayerStack --> "1..*" Layer
     Layer <|-- BackgroundLayer
     Layer <|-- RasterLayer
-    ITool <|.. PenTool
+    ITool <|.. StrokeTool
+    StrokeTool <|-- PenTool
+    StrokeTool <|-- EraserTool
     ITool <|.. DotTool
-    ITool <|.. EraserTool
     ITool ..> RasterLayer : 編集
     UndoHistory --> IUndoableOperation
 ```

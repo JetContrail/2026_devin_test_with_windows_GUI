@@ -24,6 +24,7 @@ public class CoreServiceCollectionExtensionsTests
 
         Assert.Single(provider.GetServices<ITool>(), tool => tool is PenTool);
         Assert.Single(provider.GetServices<ITool>(), tool => tool is DotTool);
+        Assert.Single(provider.GetServices<ITool>(), tool => tool is EraserTool);
         Assert.Same(provider.GetRequiredService<DrawingSession>(), provider.GetRequiredService<DrawingSession>());
     }
 

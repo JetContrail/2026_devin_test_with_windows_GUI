@@ -63,7 +63,7 @@ public class DrawingSessionTests
     [Fact]
     public void ToolWithoutImplementation_IsIgnored()
     {
-        _options.ActiveTool = ToolKind.Eraser;
+        _options.ActiveTool = ToolKind.Dot;
 
         _session.BeginStroke(new CanvasPoint(10, 10));
 
