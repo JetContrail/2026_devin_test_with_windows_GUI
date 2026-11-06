@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using DrawingApp.Core.Application.Services;
+using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.UI.ViewModels;
 
@@ -13,7 +14,7 @@ public sealed class MainViewModelTests : IDisposable
 
     public MainViewModelTests()
     {
-        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)]));
+        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)], new DrawingDocument()));
         _viewModel = new MainViewModel(_options, _canvas);
     }
 

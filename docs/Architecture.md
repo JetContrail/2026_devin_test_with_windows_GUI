@@ -116,6 +116,7 @@ classDiagram
 
 - **PixelBuffer**: `byte[]` の BGRA32 (非乗算 α)。WPF の `WriteableBitmap` (`Bgra32`) と同レイアウトで、表示時はコピーのみ
 - **レイヤー分離**: ツールは `DrawingDocument.ActiveLayer` (常に `RasterLayer`) のみを編集する。`BackgroundLayer` は `IsEditable=false` で、ツールへの公開 API を持たない
+- **DrawingDocument**: 既定 1280x720 (背景は白、描画レイヤーは透明)。`LoadBackground(image)` でキャンバスを下絵サイズに合わせ、描画レイヤーは左上を基準に残し、はみ出した部分は切り捨てる (`PixelBuffer.Resized`)。バッファを差し替えたら `Reset` を通知し、`DrawingSession` は描画途中のストロークを破棄する
 - **消しゴム**: `BlendMode.Erase` で描画レイヤーの α を 0 にする。背景は別バッファのため影響しない
 - **色**: `ToolOptions.Color` (`RgbaColor`) をストローク開始時に取得してラスタライザへ渡す。初版は `RgbaColor.Black` 固定
 - **ツール**: `ITool` の各メソッドは変更した領域 (`PixelRect`) を返す。`DrawingSession` が `ToolOptions.ActiveTool` に対応するツールへポインタ入力を振り分け、`Invalidated` イベントで差分矩形を通知する。ツールは DI で `ITool` として複数登録する (Undo 用の `IUndoableOperation` 生成は Phase6 で追加)

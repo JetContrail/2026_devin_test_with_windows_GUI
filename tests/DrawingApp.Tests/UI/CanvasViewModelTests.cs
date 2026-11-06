@@ -1,4 +1,5 @@
 using DrawingApp.Core.Application.Services;
+using DrawingApp.Core.Domain.Documents;
 using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.UI.ViewModels;
@@ -14,7 +15,7 @@ public sealed class CanvasViewModelTests : IDisposable
 
     public CanvasViewModelTests()
     {
-        _session = new DrawingSession(_options, [new PenTool(_options)]);
+        _session = new DrawingSession(_options, [new PenTool(_options)], new DrawingDocument());
         _viewModel = new CanvasViewModel(_session);
         _viewModel.Invalidated += (_, e) => _invalidated.Add(e.Area);
     }
@@ -25,8 +26,8 @@ public sealed class CanvasViewModelTests : IDisposable
     public void ExposesDrawingLayerAndSize()
     {
         Assert.Same(_session.DrawingLayer, _viewModel.DrawingLayer);
-        Assert.Equal(DrawingSession.DefaultWidth, _viewModel.CanvasWidth);
-        Assert.Equal(DrawingSession.DefaultHeight, _viewModel.CanvasHeight);
+        Assert.Equal(DrawingDocument.DefaultWidth, _viewModel.CanvasWidth);
+        Assert.Equal(DrawingDocument.DefaultHeight, _viewModel.CanvasHeight);
     }
 
     [Fact]
