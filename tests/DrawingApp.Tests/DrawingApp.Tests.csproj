@@ -33,11 +33,12 @@
 
   <ItemGroup Condition="'$(IsWindowsHost)' == 'true'">
     <ProjectReference Include="..\..\src\DrawingApp.Infrastructure\DrawingApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\DrawingApp.UI\DrawingApp.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsWindowsHost)' != 'true'">
-    <Compile Remove="Infrastructure\**" />
-    <None Include="Infrastructure\**" />
+    <Compile Remove="Infrastructure\**;UI\**" />
+    <None Include="Infrastructure\**;UI\**" />
   </ItemGroup>
 
 </Project>

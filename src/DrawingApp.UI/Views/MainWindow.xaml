@@ -1,0 +1,71 @@
+<Window x:Class="DrawingApp.UI.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:DrawingApp.UI.ViewModels"
+        xmlns:tools="clr-namespace:DrawingApp.Core.Domain.Tools;assembly=DrawingApp.Core"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        Title="{Binding Title}"
+        Width="1280" Height="800"
+        WindowStartupLocation="CenterScreen">
+    <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}" />
+        <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}" />
+    </Window.InputBindings>
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="ファイル(_F)">
+                <MenuItem Header="下絵読込(_O)..." Command="{Binding LoadBackgroundCommand}" />
+                <Separator />
+                <MenuItem Header="描画のみ保存(_D)..." Command="{Binding SaveDrawingOnlyCommand}" />
+                <MenuItem Header="合成保存(_C)..." Command="{Binding SaveCompositeCommand}" />
+            </MenuItem>
+            <MenuItem Header="編集(_E)">
+                <MenuItem Header="元に戻す(_U)" InputGestureText="Ctrl+Z" Command="{Binding UndoCommand}" />
+                <MenuItem Header="やり直し(_R)" InputGestureText="Ctrl+Y" Command="{Binding RedoCommand}" />
+            </MenuItem>
+            <MenuItem Header="ツール(_T)">
+                <MenuItem Header="ペン(_P)" IsChecked="{Binding IsPenActive, Mode=OneWay}"
+                          Command="{Binding SelectToolCommand}" CommandParameter="{x:Static tools:ToolKind.Pen}" />
+                <MenuItem Header="点(_D)" IsChecked="{Binding IsDotActive, Mode=OneWay}"
+                          Command="{Binding SelectToolCommand}" CommandParameter="{x:Static tools:ToolKind.Dot}" />
+                <MenuItem Header="消しゴム(_E)" IsChecked="{Binding IsEraserActive, Mode=OneWay}"
+                          Command="{Binding SelectToolCommand}" CommandParameter="{x:Static tools:ToolKind.Eraser}" />
+            </MenuItem>
+        </Menu>
+
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar>
+                <RadioButton Content="ペン" GroupName="Tool" IsChecked="{Binding IsPenActive, Mode=OneWay}"
+                             Command="{Binding SelectToolCommand}" CommandParameter="{x:Static tools:ToolKind.Pen}" />
+                <RadioButton Content="点" GroupName="Tool" IsChecked="{Binding IsDotActive, Mode=OneWay}"
+                             Command="{Binding SelectToolCommand}" CommandParameter="{x:Static tools:ToolKind.Dot}" />
+                <RadioButton Content="消しゴム" GroupName="Tool" IsChecked="{Binding IsEraserActive, Mode=OneWay}"
+                             Command="{Binding SelectToolCommand}" CommandParameter="{x:Static tools:ToolKind.Eraser}" />
+            </ToolBar>
+            <ToolBar>
+                <TextBlock Text="ペン" VerticalAlignment="Center" Margin="4,0" />
+                <ComboBox Width="64" ItemsSource="{Binding PenSizes}" SelectedItem="{Binding PenSize}"
+                          ItemStringFormat="{}{0}px" ToolTip="ペンサイズ" />
+                <TextBlock Text="点" VerticalAlignment="Center" Margin="8,0,4,0" />
+                <ComboBox Width="64" ItemsSource="{Binding DotSizes}" SelectedItem="{Binding DotSize}"
+                          ItemStringFormat="{}{0}px" ToolTip="点サイズ" />
+                <TextBlock Text="消しゴム" VerticalAlignment="Center" Margin="8,0,4,0" />
+                <ComboBox Width="64" ItemsSource="{Binding EraserSizes}" SelectedItem="{Binding EraserSize}"
+                          ItemStringFormat="{}{0}px" ToolTip="消しゴムサイズ" />
+            </ToolBar>
+            <ToolBar>
+                <TextBlock VerticalAlignment="Center" Margin="4,0" ToolTip="現在倍率">
+                    <Run Text="倍率:" />
+                    <Run Text="{Binding ZoomText, Mode=OneWay}" />
+                </TextBlock>
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- Drawing canvas is added in Phase 2 (#6). -->
+        <Border Background="#FF808080" />
+    </DockPanel>
+</Window>

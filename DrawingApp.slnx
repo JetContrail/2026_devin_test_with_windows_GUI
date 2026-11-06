@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/DrawingApp.Core/DrawingApp.Core.csproj" />
     <Project Path="src/DrawingApp.Infrastructure/DrawingApp.Infrastructure.csproj" />
+    <Project Path="src/DrawingApp.UI/DrawingApp.UI.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DrawingApp.Tests/DrawingApp.Tests.csproj" />
