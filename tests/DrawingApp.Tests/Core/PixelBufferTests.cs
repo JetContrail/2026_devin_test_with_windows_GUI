@@ -82,4 +82,27 @@ public class PixelBufferTests
         Assert.Equal(RgbaColor.White, resized.GetPixel(0, 0));
         Assert.Equal(RgbaColor.Transparent, resized.GetPixel(1, 0));
     }
+
+    [Fact]
+    public void CopyFrom_CopiesOnlyClippedArea()
+    {
+        var source = new PixelBuffer(4, 4);
+        source.Fill(RgbaColor.Black);
+        var target = new PixelBuffer(4, 4);
+
+        target.CopyFrom(source, new PixelRect(2, -1, 5, 2));
+
+        Assert.Equal(RgbaColor.Black, target.GetPixel(3, 0));
+        Assert.Equal(RgbaColor.Transparent, target.GetPixel(1, 0));
+        Assert.Equal(RgbaColor.Transparent, target.GetPixel(3, 1));
+    }
+
+    [Fact]
+    public void CopyFrom_InvalidSource_Throws()
+    {
+        var target = new PixelBuffer(2, 2);
+
+        Assert.Throws<ArgumentNullException>(() => target.CopyFrom(null!, target.Bounds));
+        Assert.Throws<ArgumentException>(() => target.CopyFrom(new PixelBuffer(3, 2), target.Bounds));
+    }
 }

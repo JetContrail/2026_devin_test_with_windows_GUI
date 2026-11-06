@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.IO;
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.Domain.Documents;
+using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Imaging;
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.Tests.Core;
@@ -24,7 +25,7 @@ public sealed class MainViewModelTests : IDisposable
     {
         _documents = new DocumentService(_document, _decoder);
         _export = new ExportService(_document, [new FakeImageEncoder()]);
-        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)], _document));
+        _canvas = new CanvasViewModel(new DrawingSession(_options, [new PenTool(_options)], _document, new UndoHistory()));
         _viewModel = new MainViewModel(_options, _canvas, _documents, _export, _dialogs);
     }
 

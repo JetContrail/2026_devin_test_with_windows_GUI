@@ -116,11 +116,11 @@ classDiagram
 
 - **PixelBuffer**: `byte[]` の BGRA32 (非乗算 α)。WPF の `WriteableBitmap` (`Bgra32`) と同レイアウトで、表示時はコピーのみ
 - **レイヤー分離**: ツールは `DrawingDocument.ActiveLayer` (常に `RasterLayer`) のみを編集する。`BackgroundLayer` は `IsEditable=false` で、ツールへの公開 API を持たない
-- **下絵読込**: `MainViewModel.LoadBackgroundCommand` → `IDialogService.ShowOpenImageDialog()` (UI 層の抽象。実装は `WpfDialogService`) → `DocumentService.LoadBackground(path)` → `IImageDecoder.Decode` → `DrawingDocument.LoadBackground`。開けない/読めないファイルは `ImageDecodeException` になり、`IDialogService.ShowError` で表示してドキュメントは変更しない。`DrawingCanvas` は `CanvasViewModel.LayersReset` を受けて背景・描画の両ビットマップを作り直す。Undo 履歴のクリア (A4) は Phase6 で `Reset` に接続する
+- **下絵読込**: `MainViewModel.LoadBackgroundCommand` → `IDialogService.ShowOpenImageDialog()` (UI 層の抽象。実装は `WpfDialogService`) → `DocumentService.LoadBackground(path)` → `IImageDecoder.Decode` → `DrawingDocument.LoadBackground`。開けない/読めないファイルは `ImageDecodeException` になり、`IDialogService.ShowError` で表示してドキュメントは変更しない。`DrawingCanvas` は `CanvasViewModel.LayersReset` を受けて背景・描画の両ビットマップを作り直す。Undo 履歴は `Reset` でクリアする (A4、§4.3)
 - **DrawingDocument**: 既定 1280x720 (背景は白、描画レイヤーは透明)。`LoadBackground(image)` でキャンバスを下絵サイズに合わせ、描画レイヤーは左上を基準に残し、はみ出した部分は切り捨てる (`PixelBuffer.Resized`)。バッファを差し替えたら `Reset` を通知し、`DrawingSession` は描画途中のストロークを破棄する
 - **消しゴム**: `BlendMode.Erase` で描画レイヤーの α を 0 にする。背景は別バッファのため影響しない
 - **色**: `ToolOptions.Color` (`RgbaColor`) をストローク開始時に取得してラスタライザへ渡す。初版は `RgbaColor.Black` 固定
-- **ツール**: `ITool` の各メソッドは変更した領域 (`PixelRect`) を返す。`DrawingSession` が `ToolOptions.ActiveTool` に対応するツールへポインタ入力を振り分け、`Invalidated` イベントで差分矩形を通知する。ツールは DI で `ITool` として複数登録する (Undo 用の `IUndoableOperation` 生成は Phase6 で追加)
+- **ツール**: `ITool` の各メソッドは変更した領域 (`PixelRect`) を返す。`DrawingSession` が `ToolOptions.ActiveTool` に対応するツールへポインタ入力を振り分け、`Invalidated` イベントで差分矩形を通知する。ツールは DI で `ITool` として複数登録する (Undo 用の `PixelPatchOperation` はツールではなく `DrawingSession` がストローク単位で作る)
 - **ラスタライズ**: `RoundBrushRasterizer` はアンチエイリアスなしの円ブラシ。奇数サイズはピクセル中心、偶数サイズはピクセル角に中心をスナップし、n px ブラシが正確に n px 幅になる。線分は `max(1, サイズ/4)` px 間隔でスタンプして途切れを防ぐ
 - **ブラシサイズ**: `BrushSizePresets.Pen/Dot = {1,3,5,10,20}`, `Eraser = {10,20,50}`
 
@@ -188,7 +188,9 @@ sequenceDiagram
 - 変更前の dirty 矩形パッチのみ保持。Undo 時に現状をパッチ化して Redo 用に入れ替える (メモリ半減)
 - `PixelPatch` は矩形領域を Deflate (`CompressionLevel.Fastest`) で圧縮したコピー。`PixelPatchOperation` は `RasterLayer` と変更前パッチを持ち、Undo/Redo のたびに現状と入れ替える
 - `UndoHistory` は件数上限 (既定 50) とバイト上限 (既定 64MB、Undo/Redo 両スタックの合計) を持ち、古い順に破棄する。バイト上限を超えても直近 20 件 (`GuaranteedOperations`) は残す
-- 新規操作で Redo スタックをクリア。下絵読込で履歴をクリア
+- `DrawingSession` は「最後に記録した時点の描画レイヤー」のコピー (`_committed`) を 1 枚持つ。ストローク中はツールが返す変更矩形を合算し、`EndStroke` で `_committed` からその矩形を `PixelPatch` として取り出して `UndoHistory.Push` → `_committed` の同じ矩形を現状で更新する。Undo/Redo 後も変更矩形だけ `_committed` に反映する。これでストローク開始時の全面コピーが不要になる (代わりにレイヤー 1 枚分のメモリを常に使う)
+- `DrawingSession.Undo()/Redo()` はストローク中は無視し、変更矩形を `Invalidated` で通知する (ビューは通常の描画と同じ経路で再描画)
+- 新規操作で Redo スタックをクリア。下絵読込 (`DrawingDocument.Reset`) で履歴と `_committed` をクリア
 
 ### 4.4 ズーム / パン
 
