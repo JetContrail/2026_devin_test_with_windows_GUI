@@ -1,3 +1,4 @@
+using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.DependencyInjection;
 using DrawingApp.Core.Domain.Tools;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,16 @@ public class CoreServiceCollectionExtensionsTests
             .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 
         Assert.Same(provider.GetRequiredService<ToolOptions>(), provider.GetRequiredService<ToolOptions>());
+    }
+
+    [Fact]
+    public void AddCore_RegistersPenToolAndDrawingSession()
+    {
+        using var provider = new ServiceCollection().AddCore().AddCore()
+            .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+
+        Assert.Single(provider.GetServices<ITool>(), tool => tool is PenTool);
+        Assert.Same(provider.GetRequiredService<DrawingSession>(), provider.GetRequiredService<DrawingSession>());
     }
 
     [Fact]
