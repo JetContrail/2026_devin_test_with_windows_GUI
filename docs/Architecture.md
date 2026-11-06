@@ -58,7 +58,7 @@ Core/
     Documents/     DrawingDocument (キャンバスサイズ + LayerStack + 変更通知)
     Tools/         ITool, StrokeTool (PenTool / EraserTool), DotTool, ToolKind, ToolOptions, BrushSizePresets
     Rasterization/ RoundBrushRasterizer, BlendMode (Paint / Erase)
-    History/       IUndoableOperation, PixelPatchOperation, UndoHistory
+    History/       IUndoableOperation, PixelPatch, PixelPatchOperation, UndoHistory
     Viewport/      ViewportState (Scale, Offset), ZoomPolicy (10%〜800%)
   Application/
     Ports/         IImageDecoder, IImageEncoder, IImageEncoderRegistry, IAutoSaveStorage, IClock
@@ -186,7 +186,8 @@ sequenceDiagram
 
 - 1 操作 (1 ストローク / 1 点 / 1 消去ドラッグ) = 1 `PixelPatchOperation`
 - 変更前の dirty 矩形パッチのみ保持。Undo 時に現状をパッチ化して Redo 用に入れ替える (メモリ半減)
-- パッチは Deflate 圧縮。`UndoHistory` は件数上限 (既定 50) とバイト上限を持ち、古い順に破棄 (20 件は保証)
+- `PixelPatch` は矩形領域を Deflate (`CompressionLevel.Fastest`) で圧縮したコピー。`PixelPatchOperation` は `RasterLayer` と変更前パッチを持ち、Undo/Redo のたびに現状と入れ替える
+- `UndoHistory` は件数上限 (既定 50) とバイト上限 (既定 64MB、Undo/Redo 両スタックの合計) を持ち、古い順に破棄する。バイト上限を超えても直近 20 件 (`GuaranteedOperations`) は残す
 - 新規操作で Redo スタックをクリア。下絵読込で履歴をクリア
 
 ### 4.4 ズーム / パン
