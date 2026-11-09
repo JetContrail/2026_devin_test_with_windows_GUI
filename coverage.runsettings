@@ -6,7 +6,8 @@
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>cobertura</Format>
-          <Include>[DrawingApp.*]*</Include>
+          <!-- DrawingApp = the UI assembly (DrawingApp.exe). -->
+          <Include>[DrawingApp]*,[DrawingApp.*]*</Include>
           <Exclude>[DrawingApp.Tests]*</Exclude>
           <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
           <ExcludeByFile>**/*.g.cs,**/*.g.i.cs</ExcludeByFile>

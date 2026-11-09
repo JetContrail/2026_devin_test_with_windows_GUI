@@ -84,4 +84,4 @@ docs/                          設計・計画ドキュメント
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) が Pull Request ごとに `windows-latest` で restore / build / test とカバレッジ集計を実行する。
+GitHub Actions (`.github/workflows/ci.yml`) が Pull Request ごとに `windows-latest` で restore / build / test とカバレッジ集計を実行する。行カバレッジが 80% 未満の場合は失敗する。

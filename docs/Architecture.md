@@ -265,11 +265,11 @@ sequenceDiagram
 | Core (レイヤー分離, ラスタライズ, Undo/Redo, ズーム計算, オートセーブ世代管理, 合成) | Unit | 全 OS |
 | Infrastructure (PNG 保存/読込往復, AutoSave ファイル操作) | Unit (一時ディレクトリ) | Windows |
 | ViewModel (コマンド可否, ツール選択, 倍率表示) | Unit (ポートはフェイク) | Windows |
-| 100 回繰り返し耐久 | シナリオ (アプリケーション層) | Windows |
+| 100 回繰り返し耐久 (描画→Undo→Redo→ズーム→保存→オートセーブ→下絵再読込。保持メモリ増加 32MB 未満) | シナリオ (アプリケーション層, `AddCore` で組立) | フェイク入出力: 全 OS / WIC PNG: Windows |
 
 - フレームワーク: xUnit + coverlet (Cobertura) + ReportGenerator
 - テストプロジェクトは OS に応じて TFM を切替え、Windows 以外では Core のみをビルド・実行する
-- カバレッジ目標 80% (行)。XAML View と `App` 起動コードは計測対象外 (`[ExcludeFromCodeCoverage]`)
+- カバレッジ目標 80% (行)。計測対象は Core / Infrastructure / UI (アセンブリ名 `DrawingApp`) の 3 アセンブリ (`coverage.runsettings`)。XAML View のコードビハインドと `App` 起動コードは対象外 (`[ExcludeFromCodeCoverage]`)
 
 ## 9. CI/CD 設計
 
@@ -280,8 +280,8 @@ sequenceDiagram
 | トリガ | `pull_request` (全ブランチ), `push` (main), `workflow_dispatch` |
 | ランナー | `windows-latest` (WPF ビルド・テストのため) |
 | SDK | `actions/setup-dotnet` (`global-json-file: global.json`) |
-| 手順 | `dotnet restore` → `dotnet build -c Release --no-restore` → `dotnet test -c Release --no-build --collect "XPlat Code Coverage"` → ReportGenerator → `dotnet publish` → 起動時間・メモリ計測 (`scripts/Measure-Performance.ps1`) (win-x64, self-contained, 単一 exe) |
-| 失敗条件 | ビルドエラー / 警告 (`TreatWarningsAsErrors`) / テスト失敗。Phase9 以降はカバレッジ 80% 未満も失敗 |
+| 手順 | `dotnet restore` → `dotnet build -c Release --no-restore` → `dotnet test -c Release --no-build --collect "XPlat Code Coverage"` → ReportGenerator → カバレッジゲート → `dotnet publish` (win-x64, self-contained, 単一 exe) → 起動時間・メモリ計測 (`scripts/Measure-Performance.ps1`) |
+| 失敗条件 | ビルドエラー / 警告 (`TreatWarningsAsErrors`) / テスト失敗 / 行カバレッジ (全アセンブリ合算) が `COVERAGE_THRESHOLD` (80%) 未満 / 起動時間の中央値 3 秒超・メモリ 300MB 超 |
 | 成果物 | テスト結果 (TRX), カバレッジ HTML (Artifact), Markdown サマリ (Job Summary), 実行ファイル `DrawingApp-win-x64` (Artifact, 保持 14 日) |
 | その他 | `concurrency` で同一 PR の古い実行をキャンセル、NuGet キャッシュ |
 
