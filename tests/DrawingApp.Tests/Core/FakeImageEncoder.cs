@@ -5,9 +5,9 @@ using DrawingApp.Core.Domain.Imaging;
 namespace DrawingApp.Tests.Core;
 
 /// <summary>Writes width, height and raw BGRA bytes so tests can inspect exactly what was saved.</summary>
-internal sealed class FakeImageEncoder : IImageEncoder
+internal sealed class FakeImageEncoder(string formatId = "raw") : IImageEncoder
 {
-    public string FormatId => "raw";
+    public string FormatId => formatId;
 
     public IReadOnlyList<string> Extensions { get; } = [".raw"];
 

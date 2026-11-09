@@ -1,3 +1,4 @@
+using DrawingApp.Core.Application.AutoSave;
 using DrawingApp.Core.Application.Ports;
 using DrawingApp.Core.Application.Services;
 using DrawingApp.Core.DependencyInjection;
@@ -6,6 +7,8 @@ using DrawingApp.Core.Domain.History;
 using DrawingApp.Core.Domain.Tools;
 using DrawingApp.Core.Domain.Viewport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DrawingApp.Tests.Core;
 
@@ -39,6 +42,16 @@ public class CoreServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddCore_RegistersAutoSaveWithDefaultOptions()
+    {
+        using var provider = CreateServices().AddCore()
+            .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+
+        Assert.Same(provider.GetRequiredService<AutoSaveService>(), provider.GetRequiredService<AutoSaveService>());
+        Assert.Equal(AutoSaveOptions.DefaultMaxGenerations, provider.GetRequiredService<AutoSaveOptions>().MaxGenerations);
+    }
+
+    [Fact]
     public void AddCore_Null_Throws() =>
         Assert.Throws<ArgumentNullException>(() => CoreServiceCollectionExtensions.AddCore(null!));
 
@@ -47,6 +60,10 @@ public class CoreServiceCollectionExtensionsTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<IImageDecoder>(new FakeImageDecoder());
+        services.AddSingleton<IImageEncoder>(new FakeImageEncoder("png"));
+        services.AddSingleton<IAutoSaveStorage>(new FakeAutoSaveStorage());
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
         return services;
     }
 }
