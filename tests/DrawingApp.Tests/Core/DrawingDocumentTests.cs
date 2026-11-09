@@ -39,9 +39,10 @@ public class DrawingDocumentTests
         var resets = 0;
         document.Reset += (_, _) => resets++;
 
-        document.LoadBackground(image);
+        document.LoadBackground(image, @"C:\images\base.png");
 
         Assert.Equal(1, resets);
+        Assert.Equal(@"C:\images\base.png", document.BackgroundPath);
         Assert.Equal((6, 20), (document.Width, document.Height));
         Assert.Same(image, document.Background.Pixels);
         Assert.Same(drawing, document.ActiveLayer);

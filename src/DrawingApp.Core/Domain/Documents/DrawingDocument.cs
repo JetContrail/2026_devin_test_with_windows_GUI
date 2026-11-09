@@ -34,16 +34,20 @@ public sealed class DrawingDocument
 
     public int Height => Background.Pixels.Height;
 
+    /// <summary>File the background was loaded from, or null for the initial blank background.</summary>
+    public string? BackgroundPath { get; private set; }
+
     /// <summary>
     /// Sets the background image and resizes the canvas to it. The existing drawing is kept anchored
     /// at the top-left corner; anything outside the new size is cropped.
     /// </summary>
-    public void LoadBackground(PixelBuffer image)
+    public void LoadBackground(PixelBuffer image, string? sourcePath = null)
     {
         ArgumentNullException.ThrowIfNull(image);
 
         ActiveLayer.ReplacePixels(ActiveLayer.Pixels.Resized(image.Width, image.Height));
         Background.ReplacePixels(image);
+        BackgroundPath = sourcePath;
         Reset?.Invoke(this, EventArgs.Empty);
     }
 }
