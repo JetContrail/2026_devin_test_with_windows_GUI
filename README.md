@@ -79,6 +79,7 @@ docs/                          設計・計画ドキュメント
 - [docs/README.md](docs/README.md) — ドキュメント索引
 - [Architecture.md](docs/Architecture.md) — アーキテクチャ設計
 - [ProductBacklog.md](docs/ProductBacklog.md) / [Roadmap.md](docs/Roadmap.md) / [Risks.md](docs/Risks.md) — 計画
+- [Performance.md](docs/Performance.md) — 起動時間・メモリの計測手順と結果
 - UserManual.md — 利用者マニュアル (Phase10 で作成)
 
 ## CI

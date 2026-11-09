@@ -280,8 +280,8 @@ sequenceDiagram
 | トリガ | `pull_request` (全ブランチ), `push` (main), `workflow_dispatch` |
 | ランナー | `windows-latest` (WPF ビルド・テストのため) |
 | SDK | `actions/setup-dotnet` (`global-json-file: global.json`) |
-| 手順 | `dotnet restore` → `dotnet build -c Release --no-restore` → `dotnet test -c Release --no-build --collect "XPlat Code Coverage"` → ReportGenerator → カバレッジゲート → `dotnet publish` (win-x64, self-contained, 単一 exe) |
-| 失敗条件 | ビルドエラー / 警告 (`TreatWarningsAsErrors`) / テスト失敗 / 行カバレッジ (全アセンブリ合算) が `COVERAGE_THRESHOLD` (80%) 未満 |
+| 手順 | `dotnet restore` → `dotnet build -c Release --no-restore` → `dotnet test -c Release --no-build --collect "XPlat Code Coverage"` → ReportGenerator → カバレッジゲート → `dotnet publish` (win-x64, self-contained, 単一 exe) → 起動時間・メモリ計測 (`scripts/Measure-Performance.ps1`) |
+| 失敗条件 | ビルドエラー / 警告 (`TreatWarningsAsErrors`) / テスト失敗 / 行カバレッジ (全アセンブリ合算) が `COVERAGE_THRESHOLD` (80%) 未満 / 起動時間の中央値 3 秒超・メモリ 300MB 超 |
 | 成果物 | テスト結果 (TRX), カバレッジ HTML (Artifact), Markdown サマリ (Job Summary), 実行ファイル `DrawingApp-win-x64` (Artifact, 保持 14 日) |
 | その他 | `concurrency` で同一 PR の古い実行をキャンセル、NuGet キャッシュ |
 
@@ -289,6 +289,6 @@ sequenceDiagram
 
 | 要求 | 対応 |
 |----|----|
-| 起動 3 秒以内 | 起動時はウィンドウ表示に必要なサービスのみ生成。ReadyToRun は必要に応じて検討 |
-| メモリ 300MB 以下 | 1 レイヤー = W×H×4 byte (1920×1080 で約 8MB)。Undo は差分圧縮パッチ + バイト上限 |
+| 起動 3 秒以内 | 実測 0.81 秒 (中央値, [Performance.md](Performance.md))。CI で毎回計測し 3 秒超で失敗。遅延初期化・ReadyToRun は不要と判断 |
+| メモリ 300MB 以下 | 起動直後 133MB (実測)。1 レイヤー = W×H×4 byte (1920×1080 で約 8MB)。Undo は差分圧縮パッチ + バイト上限。1920×1080 で最大約 237MB の見積もり |
 | 100 回繰り返しで異常終了しない | イベント購読解除・ビットマップ再利用、耐久シナリオテストで検証 (PBI-21) |
