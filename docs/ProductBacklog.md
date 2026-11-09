@@ -65,7 +65,7 @@ Windows向けお絵描きアプリケーション **DrawingApp** のプロダク
 | 全 Unit Test 成功 / GitHub Actions 成功 | 達成 | Windows CI で 267 件成功 (Linux では Core のみ 194 件) |
 | カバレッジ 80% 以上 | 達成 | 行カバレッジ 98.9% (Core / Infrastructure / UI 合算、80% 未満で CI 失敗) |
 | 下絵読込・ペン描画・点描画・消しゴム・レイヤー分離 | 達成 (Unit Test) | `DocumentService` / 各 `ITool` / `DrawingDocument` のテスト、WIC 実デコードのテスト |
-| 描画のみ保存・合成保存 (PNG) | 達成 (Unit Test) | `ExportService` + 実 PNG エンコードの往復テスト (透過・合成結果をピクセル比較) |
+| 描画のみ保存・合成保存 (PNG) | 達成 (Unit Test) | `ExportService` のテスト (透過・合成結果をピクセル比較)、`PngImageEncoder` の α 保持テスト |
 | Undo / Redo・Zoom / Pan・オートセーブ | 達成 (Unit Test) | `UndoHistory` / `ViewportState` / `AutoSaveService` / `FileAutoSaveStorage` のテスト、100 回耐久シナリオ |
 | 起動 3 秒以内 / メモリ 300MB 以下 | 達成 (起動直後) | CI 計測の中央値 0.81〜1.01 秒 / 約 133MB ([Performance.md](Performance.md)) |
 | README.md / Architecture.md / UserManual.md 作成済 | 達成 | [README](../README.md) / [Architecture](Architecture.md) / [UserManual](UserManual.md) |
