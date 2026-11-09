@@ -59,12 +59,20 @@ Windows向けお絵描きアプリケーション **DrawingApp** のプロダク
 
 ## Definition of Done
 
-- [ ] .NET 10 でビルド成功 / Compiler Warning 0件
-- [ ] 全 Unit Test 成功 / GitHub Actions 成功 / カバレッジ 80% 以上
-- [ ] 下絵読込・ペン描画・点描画・消しゴム・レイヤー分離
-- [ ] 描画のみ保存・合成保存 (PNG)
-- [ ] Undo / Redo・Zoom / Pan・オートセーブ
-- [ ] README.md / Architecture.md / UserManual.md 作成済
+| 項目 | 状態 | 根拠 |
+|----|----|----|
+| .NET 10 でビルド成功 / Compiler Warning 0件 | 達成 | `TreatWarningsAsErrors`。Windows CI で `0 Warning(s)` |
+| 全 Unit Test 成功 / GitHub Actions 成功 | 達成 | Windows CI で 267 件成功 (Linux では Core のみ 194 件) |
+| カバレッジ 80% 以上 | 達成 | 行カバレッジ 98.9% (Core / Infrastructure / UI 合算、80% 未満で CI 失敗) |
+| 下絵読込・ペン描画・点描画・消しゴム・レイヤー分離 | 達成 (Unit Test) | `DocumentService` / 各 `ITool` / `DrawingDocument` のテスト、WIC 実デコードのテスト |
+| 描画のみ保存・合成保存 (PNG) | 達成 (Unit Test) | `ExportService` + 実 PNG エンコードの往復テスト (透過・合成結果をピクセル比較) |
+| Undo / Redo・Zoom / Pan・オートセーブ | 達成 (Unit Test) | `UndoHistory` / `ViewportState` / `AutoSaveService` / `FileAutoSaveStorage` のテスト、100 回耐久シナリオ |
+| 起動 3 秒以内 / メモリ 300MB 以下 | 達成 (起動直後) | CI 計測の中央値 0.81〜1.01 秒 / 約 133MB ([Performance.md](Performance.md)) |
+| README.md / Architecture.md / UserManual.md 作成済 | 達成 | [README](../README.md) / [Architecture](Architecture.md) / [UserManual](UserManual.md) |
+
+未確認事項:
+- 実機の画面操作 (マウス・キーボード) による手動確認は未実施。ViewModel までは Unit Test、起動とウィンドウ表示は CI の性能計測で確認している
+- 描画後のメモリは見積もり (1920x1080 で約 237MB)。4096x4096 の下絵で Undo 履歴を上限まで使う場合は 300MB を超えうる (Risks.md R2)
 
 ## 仮定 (Assumptions)
 
