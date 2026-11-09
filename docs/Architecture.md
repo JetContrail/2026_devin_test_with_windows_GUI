@@ -265,7 +265,7 @@ sequenceDiagram
 | Core (レイヤー分離, ラスタライズ, Undo/Redo, ズーム計算, オートセーブ世代管理, 合成) | Unit | 全 OS |
 | Infrastructure (PNG 保存/読込往復, AutoSave ファイル操作) | Unit (一時ディレクトリ) | Windows |
 | ViewModel (コマンド可否, ツール選択, 倍率表示) | Unit (ポートはフェイク) | Windows |
-| 100 回繰り返し耐久 | シナリオ (アプリケーション層) | Windows |
+| 100 回繰り返し耐久 (描画→Undo→Redo→ズーム→保存→オートセーブ→下絵再読込。保持メモリ増加 32MB 未満) | シナリオ (アプリケーション層, `AddCore` で組立) | フェイク入出力: 全 OS / WIC PNG: Windows |
 
 - フレームワーク: xUnit + coverlet (Cobertura) + ReportGenerator
 - テストプロジェクトは OS に応じて TFM を切替え、Windows 以外では Core のみをビルド・実行する
