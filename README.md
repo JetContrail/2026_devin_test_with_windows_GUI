@@ -2,7 +2,7 @@
 
 下絵画像の上に描画できる Windows 向けお絵描きアプリケーション (C# / .NET 10 / WPF)。
 
-> 開発中 (Phase8: ペン・点・消しゴム・レイヤー管理・下絵読込・PNG 保存・Undo/Redo・ズーム/パン・オートセーブまで実装済み)。進捗は [Roadmap](docs/Roadmap.md) と [Milestones](https://github.com/JetContrail/2026_devin_test_with_windows_GUI/milestones) を参照。
+> 初版の全機能 (Phase1〜10) を実装済み。操作方法は [利用者マニュアル](docs/UserManual.md)、開発経緯は [Roadmap](docs/Roadmap.md) と [Milestones](https://github.com/JetContrail/2026_devin_test_with_windows_GUI/milestones) を参照。
 
 ## 概要
 
@@ -62,7 +62,14 @@ dotnet tool restore
 dotnet reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:coverage -reporttypes:"Html;MarkdownSummaryGithub"
 ```
 
+カバレッジの計測対象は `coverage.runsettings` (Core / Infrastructure / UI の 3 アセンブリ)。
 Windows 以外の OS では WPF を実行できないため、`DrawingApp.Core` のテストのみが実行される。
+
+起動時間・メモリの計測 (Windows、publish 済み exe が必要):
+
+```powershell
+./scripts/Measure-Performance.ps1 -Exe publish/DrawingApp/DrawingApp.exe
+```
 
 ## プロジェクト構成
 
@@ -71,7 +78,8 @@ src/DrawingApp.Core            ドメイン + アプリケーション層 (OS �
 src/DrawingApp.Infrastructure  画像入出力・ファイル保存 (Windows)
 src/DrawingApp.UI              WPF View / ViewModel / DI コンポジションルート
 tests/DrawingApp.Tests         Unit Test
-docs/                          設計・計画ドキュメント
+docs/                          設計・計画・利用者ドキュメント
+scripts/                       起動時間・メモリ計測スクリプト
 ```
 
 ## ドキュメント
@@ -84,4 +92,11 @@ docs/                          設計・計画ドキュメント
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) が Pull Request ごとに `windows-latest` で restore / build / test とカバレッジ集計を実行する。行カバレッジが 80% 未満の場合は失敗する。
+GitHub Actions (`.github/workflows/ci.yml`) が Pull Request と main への push ごとに `windows-latest` で以下を実行する。
+
+1. restore → フォーマット検査 (`dotnet format --verify-no-changes`) → build (警告はエラー) → test
+2. カバレッジ集計 (Job Summary / Artifact)。行カバレッジが 80% 未満なら失敗
+3. 配布用 exe の publish と Artifact `DrawingApp-win-x64` の出力
+4. 起動時間・メモリの計測。中央値が 3 秒 / 300MB を超えたら失敗
+
+詳細は [Architecture.md §9](docs/Architecture.md#9-cicd-設計)。

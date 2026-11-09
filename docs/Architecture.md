@@ -26,7 +26,9 @@ src/
 tests/
   DrawingApp.Tests/              xUnit (Windows: net10.0-windows / その他 OS: net10.0 で Core のみ)
 docs/
-  README.md  Architecture.md  UserManual.md  ProductBacklog.md  Roadmap.md  Risks.md
+  README.md  Architecture.md  UserManual.md  ProductBacklog.md  Roadmap.md  Risks.md  Performance.md
+scripts/Measure-Performance.ps1  起動時間・メモリ計測 (CI から実行)
+coverage.runsettings             カバレッジ計測対象
 .github/workflows/ci.yml
 ```
 
@@ -61,8 +63,8 @@ Core/
     History/       IUndoableOperation, PixelPatch, PixelPatchOperation, UndoHistory
     Viewport/      ViewportState (Scale, Offset, ZoomAt, PanBy, ScreenToCanvas), ZoomPolicy (10%〜800% の段階テーブル)
   Application/
-    Ports/         IImageDecoder, IImageEncoder, IImageEncoderRegistry, IAutoSaveStorage (時刻は BCL の TimeProvider)
-    Services/      DrawingSession, DocumentService, ExportService, LayerCompositor
+    Ports/         IImageDecoder, IImageEncoder, IAutoSaveStorage, AutoSaveFile, ImageDecodeException, ImageSaveException (時刻は BCL の TimeProvider)
+    Services/      DrawingSession, CanvasInvalidatedEventArgs, DocumentService, ExportService, LayerCompositor
     AutoSave/      AutoSaveService, AutoSaveOptions, AutoSaveManifest
   DependencyInjection/ CoreServiceCollectionExtensions.AddCore()
 ```
@@ -141,9 +143,9 @@ classDiagram
 ```
 UI/
   App.xaml(.cs)        Generic Host 起動 / 終了
-  Hosting/             UiServiceCollectionExtensions.AddUi()
+  Hosting/             AppHost (Generic Host 構築), UiServiceCollectionExtensions.AddUi()
   Views/               MainWindow.xaml, DrawingCanvas (UserControl)
-  ViewModels/          MainViewModel, ToolbarViewModel, CanvasViewModel
+  ViewModels/          MainViewModel (メニュー・ツールバー), CanvasViewModel (キャンバス入力・表示状態)
   Services/            IDialogService (ファイル選択・メッセージ), WpfDialogService
   Rendering/           LayerBitmapPresenter (PixelBuffer → WriteableBitmap 差分転送)
 ```
@@ -250,13 +252,15 @@ sequenceDiagram
 | 図形描画 | `ITool` 実装 (`RectangleTool` 等) を追加し `ToolKind` に登録 |
 | テキスト描画 | `ITool` + テキストラスタライザ (Infrastructure の WPF `FormattedText` アダプタ) |
 | SVG 出力 | 操作ログ (ストローク座標列) を `IVectorExporter` で出力。ラスタは `<image>` 埋め込みで代替可 |
-| WebP 出力 | `IImageEncoder` を追加登録すると保存ダイアログのフィルタに自動反映 (`IImageEncoderRegistry`) |
+| WebP 出力 | `IImageEncoder` を追加登録すると保存ダイアログのフィルタに自動反映 (`ExportService.Encoders`) |
+| オートセーブ復元 | `IAutoSaveStorage` に読込 API を追加し、`manifest.json` の `drawingFile` / `backgroundPath` から復元 |
 
 ## 7. エラーハンドリング・スレッド
 
-- ドキュメント操作は UI スレッドのみ。重い処理 (エンコード・ファイル I/O) は `Task.Run` へ
-- ファイル I/O・デコード例外はアプリケーション層で捕捉し `IDialogService.ShowError` で通知
-- 未処理例外は `DispatcherUnhandledException` / `TaskScheduler.UnobservedTaskException` でログ化
+- ドキュメント操作は UI スレッドのみ。オートセーブのエンコード・書込みは `Task.Run` で UI スレッド外へ出す。ユーザー操作の読込・保存は UI スレッドで同期実行する (最大 4096x4096 で体感上問題ない前提)
+- 読込・保存の失敗はポートの例外 (`ImageDecodeException` / `ImageSaveException`) に変換し、`MainViewModel` が捕捉して `IDialogService.ShowError` で通知する。ドキュメント・既存ファイルは変更しない
+- オートセーブの失敗は `ILogger` に記録し、次の周期で再試行する (§4.5)
+- 上記以外の想定外の例外は捕捉しない (握りつぶして不整合な状態で動き続けるより、異常終了してオートセーブから復旧する方を選ぶ)
 
 ## 8. テスト戦略
 
