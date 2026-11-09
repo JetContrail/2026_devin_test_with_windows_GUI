@@ -8,4 +8,4 @@
 | [Roadmap.md](Roadmap.md) | 実装ロードマップ・PR 計画 |
 | [Risks.md](Risks.md) | リスク一覧と対策 |
 | [Performance.md](Performance.md) | 起動時間・メモリの計測手順と結果 |
-| UserManual.md | 利用者マニュアル (Phase10 で作成) |
+| [UserManual.md](UserManual.md) | 利用者マニュアル (操作・ショートカット・保存場所) |
