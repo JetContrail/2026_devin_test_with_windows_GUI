@@ -41,8 +41,8 @@ gantt
 | 5 | M5 | PNG エンコーダ | IImageEncoder, PngImageEncoder | #13 |
 | 5 | M5 | 保存機能 | 描画のみ保存 / 合成保存, LayerCompositor | #14 #15 |
 | 6 | M6 | 履歴 | UndoHistory, PixelPatch, Ctrl+Z/Y | #16 |
-| 7 | M7 | ズーム | ZoomController, 倍率表示 | #17 |
-| 7 | M7 | パン | PanController, 中ボタン / Space | #18 |
+| 7 | M7 | ズーム | ZoomPolicy, ViewportState, 倍率表示 | #17 |
+| 7 | M7 | パン | ViewportState.PanBy, 中ボタン / Space | #18 |
 | 8 | M8 | オートセーブ | AutoSaveService, 世代管理 | #19 |
 | 9 | M9 | テスト強化 | カバレッジゲート, 耐久テスト, 性能計測 | #20 #21 #22 |
 | 10 | M10 | ドキュメント | UserManual.md, 最終化 | #23 #24 #25 |
