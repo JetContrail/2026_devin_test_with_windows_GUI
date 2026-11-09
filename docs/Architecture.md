@@ -223,6 +223,7 @@ sequenceDiagram
 ```
 
 - `AutoSaveService.RunAsync(ct)` が `PeriodicTimer(Interval, TimeProvider)` で周期実行する。UI スレッドから呼ぶので、`await` 後の複製は UI スレッドで行われ、描画中のバッファと競合しない
+- 開始・停止: `App.OnStartup` がメインウィンドウ表示後に `RunAsync` を開始し、`App.OnExit` の `IHost.StopAsync` が `IHostApplicationLifetime.ApplicationStopping` を通じてキャンセルする (終了時の追加保存はしない。ループは UI スレッドで再開するため完了は待たない)
 - 世代 id は保存時刻 (UTC) `yyyyMMddTHHmmssfffZ`。序数順 = 時系列順なので、世代管理 (古い順に削除) は Core で行い全 OS でテストする。`IAutoSaveStorage` はファイルの書込・列挙・削除だけを担う
 - `manifest.json`: `savedAt`, `width`, `height`, `drawingFile`, `backgroundPath` (`DocumentService.LoadBackground(path)` が記録。初期の白背景は null)
 - 前回保存以降に変更がなければ書き込まない。書込失敗 (`IOException` / `UnauthorizedAccessException`) はログを残して未保存のまま扱い、次の周期で再試行する。古い世代の削除失敗もログのみ。いずれもアプリを落とさない
